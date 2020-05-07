@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>AutoMate</ToolCommandName>
+    <Version>1.1.0</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/Gjoll/Eir.FGraph</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryType></RepositoryType>
+    <RepositoryUrl>https://github.com/Gjoll/Eir.FGraph</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Eir.DevTools" Version="1.16.0" />
+    <PackageReference Include="Eir.FhirKhit.R4" Version="1.0.0" />
+    <PackageReference Include="Hl7.Fhir.R4" Version="1.6.0" />
+    <PackageReference Include="Hl7.Fhir.Serialization" Version="1.6.0" />
+    <PackageReference Include="Hl7.Fhir.Specification.R4" Version="1.6.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SVGLib\SVGLib.csproj" />
+  </ItemGroup>
+
+</Project>
