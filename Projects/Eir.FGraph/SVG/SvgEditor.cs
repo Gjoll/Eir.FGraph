@@ -168,8 +168,8 @@ namespace FGraph
             colWidth = 0;
             colHeight = 0;
 
-            SvgGroup g = this.doc.AddGroup(null);
-            g.Class = group.Class;
+            SvgGroup childGroup = this.doc.AddGroup(null);
+            childGroup.Class = group.Class;
             float col1ScreenX = screenX;
             float col1ScreenY = screenY;
             float col1Width = 0;
@@ -182,7 +182,7 @@ namespace FGraph
 
             foreach (SENode node in group.Nodes)
             {
-                this.Render(g, node, screenX, col1ScreenY, out float nodeWidth, out float nodeHeight);
+                this.Render(childGroup, node, screenX, col1ScreenY, out float nodeWidth, out float nodeHeight);
                 if (col1Width < nodeWidth)
                     col1Width = nodeWidth;
 
@@ -211,6 +211,37 @@ namespace FGraph
             if (this.maxY < col1ScreenY)
                 this.maxY = col1ScreenY;
 
+            RenderGroupChildren(group,
+                childGroup,
+                screenX,
+                screenY,
+                col1Width,
+                topConnectorY,
+                bottomConnectorY,
+                out colWidth,
+                out colHeight,
+                startConnectors);
+
+
+            if (colHeight < col1Height)
+                colHeight = col1Height;
+        }
+
+
+        void RenderGroupChildren(SENodeGroup group,
+            SvgGroup childGroup,
+            float screenX,
+            float screenY,
+            float col1Width,
+            float topConnectorY,
+            float bottomConnectorY,
+            out float colWidth,
+            out float colHeight,
+            List<EndPoint> startConnectors)
+        {
+            colWidth = 0;
+            colHeight = 0;
+
             float col2ScreenXStart = screenX + col1Width + this.NodeGapRhsX(group);
             float col2ScreenY = screenY;
 
@@ -238,17 +269,17 @@ namespace FGraph
                         EndPoint stubEnd = col2EndConnectors[i];
                         endConnectorFlag = true;
                         float xStart = screenX + col1Width + this.NodeGapRhsX(group);
-                        this.CreateArrow(g, 
-                            false, 
-                            true, 
-                            xStart, 
-                            stubEnd.Location.Y, 
+                        this.CreateArrow(childGroup,
+                            false,
+                            true,
+                            xStart,
+                            stubEnd.Location.Y,
                             stubEnd.Location.X,
                             stubEnd.Location.Y);
 
                         if (String.IsNullOrEmpty(stubEnd.Annotation) == false)
                         {
-                            SvgText t = this.doc.AddText(g);
+                            SvgText t = this.doc.AddText(childGroup);
                             t.Class = "lhsText";
                             t.X = this.ToPx(xStart + 0.25f);
                             t.Y = this.ToPx(stubEnd.Location.Y - 0.25f);
@@ -275,7 +306,7 @@ namespace FGraph
             {
                 foreach (EndPoint stubStart in startConnectors)
                 {
-                    this.CreateArrow(g,
+                    this.CreateArrow(childGroup,
                         true,
                         false,
                         stubStart.Location.X,
@@ -285,7 +316,7 @@ namespace FGraph
 
                     if (String.IsNullOrEmpty(stubStart.Annotation) == false)
                     {
-                        SvgText t = this.doc.AddText(g);
+                        SvgText t = this.doc.AddText(childGroup);
                         t.Class = "rhsText";
                         t.X = this.ToPx(stubStart.Location.X + 0.25f);
                         t.Y = this.ToPx(stubStart.Location.Y - 0.25f);
@@ -298,19 +329,22 @@ namespace FGraph
                 if (group.ChildGroups.Count() > 0)
                 {
                     float x = screenX + col1Width + this.NodeGapRhsX(group);
-                    this.CreateLine(g, x, topConnectorY, x, bottomConnectorY);
+                    this.CreateLine(childGroup, x, topConnectorY, x, bottomConnectorY);
                 }
             }
 
             if (this.maxY < col2ScreenY)
                 this.maxY = col2ScreenY;
 
-            if (colHeight < col1Height)
-                colHeight = col1Height;
             if (colHeight < col2Height)
                 colHeight = col2Height;
         }
-
+        
+        
+        
+        
+        
+        
         String GetClass(params String[] cssClassNames)
         {
             foreach (String cssClassName in cssClassNames)
