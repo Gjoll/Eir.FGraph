@@ -28,8 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="TestFiles\FocusRenderAnnotationTest1 - Copy.nodeGraph" />
     <None Remove="TestFiles\FocusRenderAnnotationTest2.nodeGraph" />
-    <None Remove="TestFiles\profiles\FocusRenderAnnotationTest1.nodeGraph" />
+    <None Remove="TestFiles\FocusRenderAnnotationTest3.nodeGraph" />
+    <None Remove="TestFiles\FocusRenderAnnotationTest4.nodeGraph" />
   </ItemGroup>
   
   <ItemGroup>

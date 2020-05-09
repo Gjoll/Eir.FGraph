@@ -16,7 +16,8 @@ namespace FGraph
             public PointF Location { get; set; }
             public String Annotation { get; set; }
         }
-
+        
+        const Int32 MinXGap = 2;
         const String ArrowStart = "arrowStart";
         const String ArrowEnd = "arrowEnd";
 
@@ -97,15 +98,20 @@ namespace FGraph
             c.StrokeWidth = "0";
         }
 
-
-        public float NodeGapEndX(SENodeGroup g)
+        public float NodeGapRhsX(SENodeGroup g)
         {
-            return g.MaxRhsAnnotation() + 2;
+            Int32 retVal = g.MaxRhsAnnotation();
+            if (retVal < MinXGap)
+                retVal = MinXGap;
+            return retVal;
         }
 
-        public float NodeGapStartX(SENodeGroup g)
+        public float NodeGapLhsX(SENodeGroup g)
         {
-            return g.MaxLhsAnnotation() + 2;
+            Int32 retVal = g.MaxLhsAnnotation();
+            if (retVal < MinXGap)
+                retVal = MinXGap;
+            return retVal;
         }
 
         public void Render(SENodeGroup group,
@@ -120,7 +126,7 @@ namespace FGraph
 
             this.RenderGroup(group, this.screenX, this.screenY, lineFlag, out float width, out float height,
                 endConnectors);
-            this.root.Width = $"{this.ToPx(this.maxX + this.NodeGapStartX(group) + this.NodeGapEndX(group))}";
+            this.root.Width = $"{this.ToPx(this.maxX + this.NodeGapLhsX(group) + this.NodeGapRhsX(group))}";
             this.root.Height = $"{this.ToPx(this.maxY + 2 * this.NodeGapY)}";
             this.screenY = this.maxY + 4 * this.BorderMargin;
         }
@@ -208,13 +214,15 @@ namespace FGraph
             if (this.maxY < col1ScreenY)
                 this.maxY = col1ScreenY;
 
-            float col2ScreenX = screenX + col1Width + this.NodeGapStartX(group) + this.NodeGapEndX(group);
+            float col2ScreenXStart = screenX + col1Width + this.NodeGapRhsX(group);
             float col2ScreenY = screenY;
 
             float col2Height = 0;
             bool endConnectorFlag = false;
             foreach (SENodeGroup child in group.ChildGroups)
             {
+                float col2ScreenX = col2ScreenXStart + this.NodeGapLhsX(child);
+
                 List<EndPoint> col2EndConnectors = new List<EndPoint>();
 
                 this.RenderGroup(child,
@@ -233,16 +241,22 @@ namespace FGraph
                     {
                         EndPoint stubEnd = col2EndConnectors[i];
                         endConnectorFlag = true;
-                        float xStart = screenX + col1Width + this.NodeGapStartX(group);
-                        this.CreateArrow(g, false, true, xStart, stubEnd.Location.Y, stubEnd.Location.X,
+                        float xStart = screenX + col1Width + this.NodeGapRhsX(group);
+                        this.CreateArrow(g, 
+                            false, 
+                            true, 
+                            xStart, 
+                            stubEnd.Location.Y, 
+                            stubEnd.Location.X,
                             stubEnd.Location.Y);
 
                         if (String.IsNullOrEmpty(stubEnd.Annotation) == false)
                         {
                             SvgText t = this.doc.AddText(g);
+                            t.Class = "lhsText";
                             t.X = this.ToPx(xStart + 0.25f);
                             t.Y = this.ToPx(stubEnd.Location.Y - 0.25f);
-                            t.TextAnchor = "left";
+                            t.TextAnchor = "right";
                             t.Value = stubEnd.Annotation;
                         }
 
@@ -253,7 +267,7 @@ namespace FGraph
                     }
                 }
 
-                float width = col1Width + this.NodeGapStartX(group) + this.NodeGapEndX(group) + col2GroupWidth;
+                float width = col1Width + this.NodeGapRhsX(group) + this.NodeGapLhsX(child) + col2GroupWidth;
                 if (colWidth < width)
                     colWidth = width;
 
@@ -265,12 +279,18 @@ namespace FGraph
             {
                 foreach (EndPoint stubStart in startConnectors)
                 {
-                    this.CreateArrow(g, true, false, stubStart.Location.X, stubStart.Location.Y,
-                        screenX + col1Width + this.NodeGapStartX(group), stubStart.Location.Y);
+                    this.CreateArrow(g,
+                        true,
+                        false,
+                        stubStart.Location.X,
+                        stubStart.Location.Y,
+                        screenX + col1Width + this.NodeGapRhsX(group),
+                        stubStart.Location.Y);
 
                     if (String.IsNullOrEmpty(stubStart.Annotation) == false)
                     {
                         SvgText t = this.doc.AddText(g);
+                        t.Class = "rhsText";
                         t.X = this.ToPx(stubStart.Location.X + 0.25f);
                         t.Y = this.ToPx(stubStart.Location.Y - 0.25f);
                         t.TextAnchor = "left";
@@ -281,7 +301,7 @@ namespace FGraph
                 // Make vertical line that connects all stubs.
                 if (group.ChildGroups.Count() > 0)
                 {
-                    float x = screenX + col1Width + this.NodeGapStartX(group);
+                    float x = screenX + col1Width + this.NodeGapRhsX(group);
                     this.CreateLine(g, x, topConnectorY, x, bottomConnectorY);
                 }
             }

@@ -20,15 +20,16 @@ namespace FGraph.Tests
         {
             String url = "http://hl7.org/fhir/us/breast-radiology/StructureDefinition/BreastRadiologyComposition";
             String baseUrl = url.FhirBaseUrl();
-            Assert.True(String.Compare(baseUrl, "http://hl7.org/fhir/us/breast-radiology") == 0);
+            Assert.True(String.Compare(baseUrl, "http://hl7.org/fhir/us/breast-radiology/") == 0);
         }
 
         [Fact]
         public void FindNodeByAnchorTest1()
         {
             FGrapher f = new FGrapher();
+            f.BaseUrl = "http://hl7.org/fhir/us/breast-radiology/";
             f.LoadResources(TestFile("profiles"));
-            Assert.True(String.Compare(f.BaseUrl, "http://hl7.org/fhir/us/breast-radiology", StringComparison.InvariantCulture) == 0);
+            Assert.True(String.Compare(f.BaseUrl, "http://hl7.org/fhir/us/breast-radiology/", StringComparison.InvariantCulture) == 0);
             Assert.True(f.TryGetProfile("http://hl7.org/fhir/us/breast-radiology/StructureDefinition/BreastRadiologyComposition", out StructureDefinition sd));
             Assert.True(String.Compare(sd.Url, "http://hl7.org/fhir/us/breast-radiology/StructureDefinition/BreastRadiologyComposition", StringComparison.InvariantCulture) == 0);
             f.Load(TestFile("FindNodeByAnchorTest1.nodeGraph"));
@@ -113,12 +114,11 @@ namespace FGraph.Tests
             Debug.Assert(f.HasErrors == false);
         }
 
-        [Fact]
-        public void FocusRenderAnnotationTest1()
+        void RenderAnnotationTest(String fileName)
         {
             FGrapher f = new FGrapher();
             f.BaseUrl = "http://Test.com/";
-            f.Load(TestFile("FocusRenderAnnotationTest1.nodeGraph"));
+            f.Load(TestFile(fileName));
             f.OutputDir = @"c:\Temp\FGraphTests";
             f.ProcessLinks();
 
@@ -128,5 +128,16 @@ namespace FGraph.Tests
 
             Debug.Assert(f.HasErrors == false);
         }
+
+        [Fact]
+        public void FocusRenderAnnotationTest1() => RenderAnnotationTest("FocusRenderAnnotationTest1.nodeGraph");
+
+        [Fact]
+        public void FocusRenderAnnotationTest2() => RenderAnnotationTest("FocusRenderAnnotationTest2.nodeGraph");
+
+        [Fact]
+        public void FocusRenderAnnotationTest3() => RenderAnnotationTest("FocusRenderAnnotationTest3.nodeGraph");
+        [Fact]
+        public void FocusRenderAnnotationTest4() => RenderAnnotationTest("FocusRenderAnnotationTest4.nodeGraph");
     }
 }

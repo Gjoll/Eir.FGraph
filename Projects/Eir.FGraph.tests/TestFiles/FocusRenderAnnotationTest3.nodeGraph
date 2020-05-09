@@ -5,6 +5,15 @@
             "displayName": "P/Alpha",
             "cssClass": "parentNode",
             "anchor" : {"url" : "http://Test.com/StructureDefinition/ParentAlpha"},
+            "rhsAnnotationText":  "P/Alpha"
+        }
+    },
+    {
+        "graphNode": {
+            "nodeName": "Parent/Beta",
+            "displayName": "P/Beta",
+            "cssClass": "parentNode",
+            "anchor" : {"url" : "http://Test.com/StructureDefinition/ParentBeta"},
         }
     },
     {
@@ -12,8 +21,7 @@
             "nodeName": "Main/Alpha",
             "displayName": "Main",
             "cssClass": "mainNode",
-            "lhsAnnotationText":  "LHSMain",
-            "anchor": { "url": "http://Test.com/StructureDefinition/FocusRenderAnnotationTest1" },
+            "anchor": { "url": "http://Test.com/StructureDefinition/FocusRenderAnnotationTest3" },
         }
     },
     {
@@ -22,6 +30,15 @@
             "displayName": "C/Alpha",
             "cssClass": "childNode",
             "anchor" : {"url" : "http://Test.com/StructureDefinition/ChildAlpha"},
+            "lhsAnnotationText":  "C/Alpha"
+        }
+    },
+    {
+        "graphNode": {
+            "nodeName": "Child/Beta",
+            "displayName": "C/Beta",
+            "cssClass":  "childNode" ,
+            "anchor" : {"url" : "http://Test.com/StructureDefinition/ChildBeta"},
         }
     },
     {
