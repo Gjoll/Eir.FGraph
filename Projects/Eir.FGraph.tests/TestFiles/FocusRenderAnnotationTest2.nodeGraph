@@ -1,0 +1,58 @@
+[
+    {
+        "graphNode": {
+            "nodeName": "Parent/Alpha",
+            "displayName": "P/Alpha",
+            "cssClass": "parentNode",
+            "anchor" : {"url" : "http://Test.com/StructureDefinition/ParentAlpha"},
+        }
+    },
+    {
+        "graphNode": {
+            "nodeName": "Parent/Beta",
+            "displayName": "P/Beta",
+            "cssClass": "parentNode",
+            "anchor" : {"url" : "http://Test.com/StructureDefinition/ParentBeta"},
+        }
+    },
+    {
+        "graphNode": {
+            "nodeName": "Main/Alpha",
+            "displayName": "Main",
+            "cssClass": "mainNode",
+            "lhsAnnotationText":  "LHSMain",
+            "rhsAnnotationText":  "RHSMain",
+            "anchor" : {"url" : "http://Test.com/StructureDefinition/MainAlpha"},
+        }
+    },
+    {
+        "graphNode": {
+            "nodeName": "Child/Alpha",
+            "displayName": "C/Alpha",
+            "cssClass": "childNode",
+            "anchor" : {"url" : "http://Test.com/StructureDefinition/ChildAlpha"},
+        }
+    },
+    {
+        "graphNode": {
+            "nodeName": "Child/Beta",
+            "displayName": "C/Beta",
+            "cssClass":  "childNode" ,
+            "anchor" : {"url" : "http://Test.com/StructureDefinition/ChildBeta"},
+        }
+    },
+    {
+        "graphLinkByName": {
+            "traversalName": "focus/main",
+            "source": "Parent/*",
+            "target": "Main/Alpha"
+        }
+    },
+    {
+        "graphLinkByName": {
+            "traversalName": "focus/main",
+            "source": "Main/Alpha",
+            "target": "Child/*"
+        }
+    }
+]

@@ -104,9 +104,9 @@ namespace FGraph
         void GraphNode(FragmentNode fragmentNode)
         {
             SvgEditor e = new SvgEditor("");
-            SENodeGroup parentsGroup = new SENodeGroup("parents", false);
-            SENodeGroup focusGroup = new SENodeGroup("focus", false);
-            SENodeGroup childrenGroup = new SENodeGroup("children", false);
+            SENodeGroup parentsGroup = new SENodeGroup("parents");
+            SENodeGroup focusGroup = new SENodeGroup("focus");
+            SENodeGroup childrenGroup = new SENodeGroup("children");
             parentsGroup.AppendChild(focusGroup);
             focusGroup.AppendChild(childrenGroup);
 

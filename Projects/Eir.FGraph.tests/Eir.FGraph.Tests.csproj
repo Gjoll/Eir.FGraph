@@ -26,6 +26,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="TestFiles\FocusRenderAnnotationTest2.nodeGraph" />
+    <None Remove="TestFiles\profiles\FocusRenderAnnotationTest1.nodeGraph" />
+  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Eir.FGraph\Eir.FGraph.csproj" />
@@ -122,10 +127,6 @@
     <None Update="Test1.fsh">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="TestFiles\" />
   </ItemGroup>
 
 </Project>

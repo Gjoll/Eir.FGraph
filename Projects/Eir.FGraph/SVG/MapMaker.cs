@@ -12,7 +12,6 @@ namespace FGraph
     class MapMaker
     {
         protected ResourceMap map;
-        protected bool showCardinality = true;
 
         protected Color focusColor = Color.White;
         protected Color fhirColor = Color.LightGray;
@@ -147,7 +146,7 @@ namespace FGraph
             }
             else
             {
-                SENodeGroup groupChild = group.AppendChild("", this.showCardinality);
+                SENodeGroup groupChild = group.AppendChild("");
                 CreateDirectNode(groupChild);
                 if (ShowChildren(link))
                     this.AddChildren(childMapNode,

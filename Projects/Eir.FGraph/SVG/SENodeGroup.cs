@@ -11,32 +11,68 @@ namespace FGraph
     {
         public String Class { get; set; }
 
-        /// <summary>
-        /// For debugging only.
-        /// </summary>
-        public bool ShowCardinalities
+        Int32 maxLhsAnnotation = -1;
+        Int32 maxRhsAnnotation = -1;
+
+        public Int32 MaxRhsAnnotation()
         {
-            get
+            if (this.maxRhsAnnotation == -1)
             {
-                if (this.showCardinalities == true)
-                    return this.showCardinalities;
-
-                foreach (SENodeGroup child in this.ChildGroups)
+                this.maxRhsAnnotation = 0;
+                if (this.nodes.Count > 0)
                 {
-                    if (child.ShowCardinalities == true)
-                        return true;
+                    foreach (SENode node in this.nodes)
+                    {
+                        if (
+                            (node.RhsAnnotation != null) &&
+                            (node.RhsAnnotation.Length > this.maxRhsAnnotation)
+                        )
+                            this.maxRhsAnnotation = node.RhsAnnotation.Length;
+                    }
                 }
-
-                return false;
+                else
+                {
+                    foreach (SENodeGroup group in this.ChildGroups)
+                    {
+                        Int32 groupMaxRhsAnnotation = group.MaxRhsAnnotation();
+                        if (groupMaxRhsAnnotation > this.maxRhsAnnotation)
+                            this.maxRhsAnnotation = groupMaxRhsAnnotation;
+                    }
+                }
             }
-            set { this.showCardinalities = value; }
+            return this.maxRhsAnnotation;
         }
 
-        bool showCardinalities = true;
 
-        /// <summary>
-        /// For debugging only.
-        /// </summary>
+        public Int32 MaxLhsAnnotation()
+        {
+            if (this.maxLhsAnnotation == -1)
+            {
+                this.maxLhsAnnotation = 0;
+                if (this.nodes.Count > 0)
+                {
+                    foreach (SENode node in this.nodes)
+                    {
+                        if (
+                            (node.LhsAnnotation != null) &&
+                            (node.LhsAnnotation.Length > this.maxLhsAnnotation)
+                        )
+                            this.maxLhsAnnotation = node.LhsAnnotation.Length;
+                    }
+                }
+                else
+                {
+                    foreach (SENodeGroup group in this.ChildGroups)
+                    {
+                        Int32 groupMaxLhsAnnotation = group.MaxLhsAnnotation();
+                        if (groupMaxLhsAnnotation > this.maxLhsAnnotation)
+                            this.maxLhsAnnotation = groupMaxLhsAnnotation;
+                    }
+                }
+            }
+            return this.maxLhsAnnotation;
+        }
+
         public String Title { get; set; }
 
         public IEnumerable<SENode> Nodes => this.nodes;
@@ -45,10 +81,8 @@ namespace FGraph
         public IEnumerable<SENodeGroup> ChildGroups => this._childGroups;
         List<SENodeGroup> _childGroups = new List<SENodeGroup>();
 
-        public SENodeGroup(String title, bool showCardinalities)
+        public SENodeGroup(String title)
         {
-            //Debug.Assert(showCardinalities == true);
-            this.ShowCardinalities = showCardinalities;
             if (title == null)
                 throw new Exception("Title must be non empty for sorting");
             this.Title = title;
@@ -86,9 +120,9 @@ namespace FGraph
             this._childGroups.AddRange(nodeGroups);
         }
 
-        public SENodeGroup AppendChild(String title, bool showCardinality)
+        public SENodeGroup AppendChild(String title)
         {
-            SENodeGroup retVal = new SENodeGroup(title, showCardinality);
+            SENodeGroup retVal = new SENodeGroup(title);
             this._childGroups.Add(retVal);
             return retVal;
         }

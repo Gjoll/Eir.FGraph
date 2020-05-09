@@ -29,7 +29,7 @@ namespace FGraph
             }
         }
 
-        void RenderFocusGraph(String cssFile,
+        public void RenderFocusGraph(String cssFile,
             GraphNode focusGraphNode,
             String traversalName)
         {
@@ -37,9 +37,9 @@ namespace FGraph
             e.AddCssFile(cssFile);
 
             this.svgEditors.Add(e);
-            SENodeGroup seGroupParents = new SENodeGroup("parents", true);
-            SENodeGroup seGroupFocus = new SENodeGroup("focus", true);
-            SENodeGroup seGroupChildren = new SENodeGroup("children", true);
+            SENodeGroup seGroupParents = new SENodeGroup("parents");
+            SENodeGroup seGroupFocus = new SENodeGroup("focus");
+            SENodeGroup seGroupChildren = new SENodeGroup("children");
             seGroupParents.AppendChild(seGroupFocus);
             seGroupFocus.AppendChild(seGroupChildren);
 
@@ -213,7 +213,7 @@ namespace FGraph
                     (childNodes.Contains(childLink.Node) == false)
                 )
                 {
-                    SENodeGroup childContainer = new SENodeGroup("Child", true);
+                    SENodeGroup childContainer = new SENodeGroup("Child");
                     SENode child = CreateNode(childLink.Node);
                     childContainer.AppendNode(child);
 

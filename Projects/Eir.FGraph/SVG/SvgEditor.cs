@@ -30,10 +30,6 @@ namespace FGraph
         public float BorderWidth { get; set; } = 0.125f;
         public float LineHeight { get; set; } = 1.25f;
         public float BorderMargin { get; set; } = 0.5f;
-        public float NodeGapNoCardStartX { get; set; } = 2.0f;
-        public float NodeGapCardStartX { get; set; } = 3.0f;
-        public float NodeGapNoCardEndX { get; set; } = 2.0f;
-        public float NodeGapCardEndX { get; set; } = 3.0f;
         public float NodeGapY { get; set; } = 0.5f;
         public float RectRx { get; set; } = 0.25f;
         public float RectRy { get; set; } = 0.25f;
@@ -104,16 +100,12 @@ namespace FGraph
 
         public float NodeGapEndX(SENodeGroup g)
         {
-            if (g.ShowCardinalities == true)
-                return this.NodeGapCardEndX;
-            return this.NodeGapNoCardEndX;
+            return g.MaxRhsAnnotation() + 2;
         }
 
         public float NodeGapStartX(SENodeGroup g)
         {
-            if (g.ShowCardinalities == true)
-                return this.NodeGapCardStartX;
-            return this.NodeGapNoCardStartX;
+            return g.MaxLhsAnnotation() + 2;
         }
 
         public void Render(SENodeGroup group,
@@ -144,15 +136,7 @@ namespace FGraph
             colWidth = 0;
             colHeight = 0;
 
-            // Some groups just contain sub groups. Some contain sub groups.
-            // None should contain both.
-            if (
-                (group.Nodes.Count() > 0) &&
-                (group.ChildGroups.Count() > 0)
-            )
-            {
-                throw new Exception($"Group contains both nodes and child groups");
-            }
+            // Some groups just contain sub groups (no nodes). Make each group children of this groups parent.
 
             if (group.Nodes.Count() > 0)
                 this.RenderSimpleGroup(group, screenX, screenY, lineFlag, out colWidth, out colHeight, endConnectors);
@@ -253,7 +237,7 @@ namespace FGraph
                         this.CreateArrow(g, false, true, xStart, stubEnd.Location.Y, stubEnd.Location.X,
                             stubEnd.Location.Y);
 
-                        if (child.ShowCardinalities == true)
+                        if (String.IsNullOrEmpty(stubEnd.Annotation) == false)
                         {
                             SvgText t = this.doc.AddText(g);
                             t.X = this.ToPx(xStart + 0.25f);
@@ -284,7 +268,7 @@ namespace FGraph
                     this.CreateArrow(g, true, false, stubStart.Location.X, stubStart.Location.Y,
                         screenX + col1Width + this.NodeGapStartX(group), stubStart.Location.Y);
 
-                    if (group.ShowCardinalities == true)
+                    if (String.IsNullOrEmpty(stubStart.Annotation) == false)
                     {
                         SvgText t = this.doc.AddText(g);
                         t.X = this.ToPx(stubStart.Location.X + 0.25f);

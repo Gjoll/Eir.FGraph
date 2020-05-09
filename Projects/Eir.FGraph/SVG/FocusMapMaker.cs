@@ -43,9 +43,9 @@ namespace FGraph
             //Debug.Assert(focusNode.Name != "SectionFindingsLeftBreast");
 
             SvgEditor e = new SvgEditor("");
-            SENodeGroup parentsGroup = new SENodeGroup("parents", true);
-            SENodeGroup focusGroup = new SENodeGroup("focus", true);
-            SENodeGroup childrenGroup = new SENodeGroup("children", true);
+            SENodeGroup parentsGroup = new SENodeGroup("parents");
+            SENodeGroup focusGroup = new SENodeGroup("focus");
+            SENodeGroup childrenGroup = new SENodeGroup("children");
             parentsGroup.AppendChild(focusGroup);
             focusGroup.AppendChild(childrenGroup);
             {
@@ -98,10 +98,10 @@ namespace FGraph
                 parentsGroup.AppendNodes(extensionParents);
             }
             {
-                SENodeGroup targetChildren = new SENodeGroup("A.Targets", true);
-                SENodeGroup componentChildren = new SENodeGroup("B.Components", true);
-                SENodeGroup extensionChildren = new SENodeGroup("C.Extensions", true);
-                SENodeGroup valueSetChildren = new SENodeGroup("D.ValueSets", true);
+                SENodeGroup targetChildren = new SENodeGroup("A.Targets");
+                SENodeGroup componentChildren = new SENodeGroup("B.Components");
+                SENodeGroup extensionChildren = new SENodeGroup("C.Extensions");
+                SENodeGroup valueSetChildren = new SENodeGroup("D.ValueSets");
 
                 childrenGroup.AppendChild(targetChildren);
                 childrenGroup.AppendChild(componentChildren);
@@ -134,12 +134,12 @@ namespace FGraph
                             node.AddTextLine(link.LocalName.ToObject<String>(), componentHRef);
                             node.AddTextLine("extension", componentHRef);
 
-                            SENodeGroup nodeGroup = new SENodeGroup(node.AllText(), true);
+                            SENodeGroup nodeGroup = new SENodeGroup(node.AllText());
                             extensionChildren.AppendChild(nodeGroup);
                             nodeGroup.AppendNode(node);
 
                             {
-                                SENodeGroup extGroup = new SENodeGroup("extension", true);
+                                SENodeGroup extGroup = new SENodeGroup("extension");
                                 nodeGroup.AppendChild(extGroup);
                                 //SENode extNode;
                                 String extUrl = link.LinkTarget.ToObject<String>().Trim();
@@ -178,7 +178,7 @@ namespace FGraph
                                     out ResourceMap.Node childNode) == true)
                             {
                                 SENode node = this.CreateResourceNode(childNode, link, true);
-                                SENodeGroup nodeGroup = new SENodeGroup(node.AllText(), false);
+                                SENodeGroup nodeGroup = new SENodeGroup(node.AllText());
                                 valueSetChildren.AppendChild(nodeGroup);
                                 nodeGroup.AppendNode(node);
                             }
@@ -192,7 +192,7 @@ namespace FGraph
                                 throw new Exception(
                                     $"Child target {link.LinkTarget.ToObject<String>()} not found in map");
                             SENode node = this.CreateResourceNode(childNode, link, true);
-                            SENodeGroup nodeGroup = new SENodeGroup(node.AllText(), true);
+                            SENodeGroup nodeGroup = new SENodeGroup(node.AllText());
                             targetChildren.AppendChild(nodeGroup);
                             nodeGroup.AppendNode(node);
                         }

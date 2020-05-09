@@ -252,6 +252,8 @@ namespace FGraph
             if (url.StartsWith(this.BaseUrl))
             {
                 String nonBasePart = url.Substring(this.BaseUrl.Length);
+                if (nonBasePart.StartsWith("/"))
+                    nonBasePart = nonBasePart.Substring(1);
                 String[] parts = nonBasePart.Split('/');
                 if (parts.Length != 2)
                     throw new Exception($"Invalid url parts {nonBasePart}");

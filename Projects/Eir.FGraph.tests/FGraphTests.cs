@@ -109,6 +109,24 @@ namespace FGraph.Tests
             f.ProcessLinks();
             f.RenderFocusGraphs(TestFile("FocusRenderTest1.css"));
             f.SaveAll();
+
+            Debug.Assert(f.HasErrors == false);
+        }
+
+        [Fact]
+        public void FocusRenderAnnotationTest1()
+        {
+            FGrapher f = new FGrapher();
+            f.BaseUrl = "http://Test.com/";
+            f.Load(TestFile("FocusRenderAnnotationTest1.nodeGraph"));
+            f.OutputDir = @"c:\Temp\FGraphTests";
+            f.ProcessLinks();
+
+            Assert.True(f.TryGetNodeByName("Main/Alpha", out GraphNode main));
+            f.RenderFocusGraph(TestFile("FocusRenderTest1.css"), main, "focus");
+            f.SaveAll();
+
+            Debug.Assert(f.HasErrors == false);
         }
     }
 }
