@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using System.Drawing;
 using Hl7.Fhir.Model;
+using System.Diagnostics;
 
 namespace FGraph
 {
@@ -64,7 +65,7 @@ namespace FGraph
             node.Class = "valueSet";
 
             String displayName = binding.ValueSet.LastPathPart();
-            if (this.valueSets.TryGetValue(binding.ValueSet, out ValueSet vs) == false)
+            if (this.TryGetValueSet(binding.ValueSet, out ValueSet vs) == false)
             {
                 displayName = vs.Name;
             }
@@ -84,6 +85,7 @@ namespace FGraph
             node.Class = graphNode.CssClass;
 
             String displayName = graphNode.DisplayName;
+            Debug.Assert(displayName != "Breast/Radiology/Composition");
 
             foreach (String titlePart in displayName.Split('/'))
             {
@@ -109,7 +111,7 @@ namespace FGraph
                 return null;
             }
 
-            if (this.profiles.TryGetValue(anchor.Url, out StructureDefinition sDef) == false)
+            if (this.TryGetProfile(anchor.Url, out StructureDefinition sDef) == false)
             {
                 this.ConversionError("FGrapher", fcn, $"StructureDefinition {anchor.Url} not found");
                 return null;
@@ -195,7 +197,7 @@ namespace FGraph
             foreach (GraphNode.Link childLink in focusNode.ChildLinks)
             {
                 if (
-                    (childLink.Depth <= depth) &&
+                    (depth > 0) &&
                     (r.IsMatch(childLink.Traversal.TraversalName)) &&
                     (childNodes.Contains(childLink.Node) == false)
                 )

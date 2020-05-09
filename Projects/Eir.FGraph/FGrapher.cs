@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using Hl7.Fhir.Model;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Hl7.Fhir.Serialization;
 using FhirKhit.Tools.R4;
 
@@ -28,41 +29,56 @@ namespace FGraph
         }
         private string outputDir;
 
-        Dictionary<String, StructureDefinition> profiles = new Dictionary<String, StructureDefinition>();
-        Dictionary<String, ValueSet> valueSets = new Dictionary<String, ValueSet>();
-        Dictionary<String, CodeSystem> codeSystems = new Dictionary<String, CodeSystem>();
-
+        Dictionary<String, DomainResource> resources = new Dictionary<String, DomainResource>();
         Dictionary<String, GraphNode> graphNodesByName = new Dictionary<string, GraphNode>();
         Dictionary<GraphAnchor, GraphNode> graphNodesByAnchor = new Dictionary<GraphAnchor, GraphNode>();
 
         List<GraphLink> graphLinks = new List<GraphLink>();
         List<SvgEditor> svgEditors = new List<SvgEditor>();
 
-        public bool DebugFlag { get; set; } = false;
+        public bool DebugFlag { get; set; } = true;
 
         public FGrapher()
         {
         }
 
-        public override void ConversionError(string className, string method, string msg)
-        {
-            Debugger.Break();
-            base.ConversionError(className, method, msg);
-        }
-
-        public override void ConversionWarn(string className, string method, string msg)
+        public void ConversionError(string method, string msg)
         {
             //Debugger.Break();
-            base.ConversionWarn(className, method, msg);
+            base.ConversionError("FGrapher", method, msg);
+        }
+
+        public void ConversionWarn(string method, string msg)
+        {
+            //Debugger.Break();
+            base.ConversionWarn("FGrapher", method, msg);
+        }
+
+        public void ConversionInfo(string method, string msg)
+        {
+            //Debugger.Break();
+            base.ConversionInfo("FGrapher", method, msg);
         }
 
         public bool TryGetNodeByName(String name, out GraphNode node) => this.graphNodesByName.TryGetValue(name, out node);
         public bool TryGetNodeByAnchor(GraphAnchor anchor, out GraphNode node) => this.graphNodesByAnchor.TryGetValue(anchor, out node);
 
 
-        public bool TryGetProfile(String url, out StructureDefinition sd) => this.profiles.TryGetValue(url, out sd);
-        public bool TryGetValueSet(String url, out ValueSet vs) => this.valueSets.TryGetValue(url, out vs);
-        public bool TryGetProfile(String url, out CodeSystem cs) => this.codeSystems.TryGetValue(url, out cs);
+        public bool TryGetResource<T>(String url, out T sd)
+        where T : DomainResource
+        {
+            sd = null;
+            if (this.resources.TryGetValue(url, out DomainResource dr) == false)
+                return false;
+            sd = dr as T;
+            if (sd == null)
+                return false;
+            return true;
+        }
+
+        public bool TryGetProfile(String url, out StructureDefinition sd) => this.TryGetResource<StructureDefinition>(url, out sd);
+        public bool TryGetValueSet(String url, out ValueSet vs) => this.TryGetResource<ValueSet>(url, out vs);
+        public bool TryGetProfile(String url, out CodeSystem cs) => this.TryGetResource<CodeSystem>(url, out cs);
 
 
         public void LoadResources(String path)
@@ -74,9 +90,7 @@ namespace FGraph
                 LoadResourceFile(path);
             else
             {
-                this.ConversionError("FGrapher",
-                    "LoadResources",
-                    $"{path} not found");
+                this.ConversionError("LoadResources", $"{path} not found");
             }
         }
 
@@ -122,25 +136,22 @@ namespace FGraph
                     if (sDef.Snapshot == null)
                         SnapshotCreator.Create(sDef);
                     resourceUrl = sDef.Url;
-                    profiles.Add(sDef.Url, sDef);
                     break;
 
                 case ValueSet valueSet:
                     resourceUrl = valueSet.Url;
-                    valueSets.Add(valueSet.Url, valueSet);
                     break;
 
                 case CodeSystem codeSystem:
                     resourceUrl = codeSystem.Url;
-                    codeSystems.Add(codeSystem.Url, codeSystem);
                     break;
             }
 
+            this.resources.Add(resourceUrl, domainResource);
+
             // We expect to only load resources all with the same base resoruce name.
             String rBaseUrl = resourceUrl.FhirBaseUrl();
-            if (this.BaseUrl == null)
-                this.BaseUrl = rBaseUrl;
-            else if (String.Compare(this.BaseUrl, rBaseUrl, StringComparison.InvariantCulture) != 0)
+            if (String.Compare(this.BaseUrl, rBaseUrl, StringComparison.InvariantCulture) != 0)
                 throw new Exception("Resource '{resourceUrl}' does not have base url '{this.BaseUrl}'");
         }
 
@@ -157,10 +168,17 @@ namespace FGraph
             using (StreamReader r = new StreamReader(path))
             {
                 string json = r.ReadToEnd();
-                JArray array = JsonConvert.DeserializeObject<JArray>(json);
-
-                foreach (var item in array)
-                    LoadItem(item);
+                try
+                {
+                    JArray array = JsonConvert.DeserializeObject<JArray>(json);
+                    foreach (var item in array)
+                        LoadItem(item);
+                }
+                catch (Exception e)
+                {
+                    this.ConversionError("LoadFile", $"Error loading json file '{Path.GetFileName(path)}'\n" +
+                                                     $"    {e.Message}");
+                }
             }
         }
 
@@ -171,6 +189,13 @@ namespace FGraph
                 LoadItem(kvp.Key, kvp.Value);
         }
 
+        void SetHRefFromAnchor(GraphNode node)
+        {
+            if (node.Anchor == null)
+                return;
+            String hRef = this.HRef(node.Anchor.Url, node.Anchor.Item);
+            node.HRef = hRef;
+        }
 
         public void LoadItem(String type, JToken value)
         {
@@ -179,6 +204,7 @@ namespace FGraph
                 case "graphNode":
                     {
                         GraphNode node = new GraphNode(this, value);
+                        this.SetHRefFromAnchor(node);
                         this.graphNodesByName.Add(node.NodeName, node);
                         if (node.Anchor != null)
                             this.graphNodesByAnchor.Add(node.Anchor, node);
@@ -200,9 +226,7 @@ namespace FGraph
                     break;
 
                 default:
-                    this.ConversionError("FGrapher",
-                        "Load",
-                        $"unknown graph item '{type}'");
+                    this.ConversionError("Load", $"unknown graph item '{type}'");
                     return;
             }
         }
@@ -216,10 +240,50 @@ namespace FGraph
                 LoadFile(path);
             else
             {
-                this.ConversionError("FGrapher",
-                    "Load",
-                    $"{path} not found");
+                this.ConversionError("Load", $"{path} not found");
             }
+        }
+
+        protected String HRef(String url, String item = null)
+        {
+            if (url.StartsWith("http://hl7.org/fhir/StructureDefinition/"))
+                return url;
+
+            if (url.StartsWith(this.BaseUrl))
+            {
+                String nonBasePart = url.Substring(this.BaseUrl.Length);
+                String[] parts = nonBasePart.Split('/');
+                if (parts.Length != 2)
+                    throw new Exception($"Invalid url parts {nonBasePart}");
+
+                if (String.IsNullOrEmpty(item) == true)
+                    return $"{parts[0]}-{parts[1]}.html";
+
+                if (this.TryGetResource<DomainResource>(url, out DomainResource resource) == false)
+                {
+                    this.ConversionError("HRef", "Resource {url} not found");
+                    return null;
+                }
+
+                switch (resource)
+                {
+                    case StructureDefinition sDef:
+                        ElementDefinition elementSnap = sDef.FindSnapElementShortName(item);
+                        if (elementSnap == null)
+                        {
+                            this.ConversionError("HRef", $"Snapshot node ..{item} not found");
+                            return null;
+                        }
+                        return $"{parts[0]}-{parts[1]}-definitions.html#{elementSnap.ElementId}";
+
+                    default:
+                        this.ConversionError("HRef", $"Resource type '{resource.GetType().Name}' not implemented ");
+                        return null;
+                }
+            }
+
+            this.ConversionWarn("HRef", "Unknown url");
+            return "";
         }
 
         public void Process()
@@ -249,8 +313,7 @@ namespace FGraph
             }
             if (retVal.Count == 0)
             {
-                this.ConversionWarn("FGrapher",
-                    "FindNamedNodes",
+                this.ConversionWarn("FindNamedNodes",
                     $"No nodes named '{name}' found");
             }
 
@@ -339,10 +402,13 @@ namespace FGraph
             void CreateLink(GraphNode sourceNode,
                 String linkElementId)
             {
+                if (this.DebugFlag)
+                    this.ConversionInfo("", $"{sourceNode} -> {linkElementId}");
+
                 GraphAnchor anchor = sourceNode.Anchor;
                 if (anchor == null)
                 {
-                    this.ConversionError("FGrapher", fcn, $"Node {sourceNode.NodeName} anchor is null");
+                    this.ConversionError(fcn, $"Node {sourceNode.NodeName} anchor is null");
                     return;
                 }
 
@@ -355,11 +421,9 @@ namespace FGraph
                 )
                     linkElementId = anchor.Item + linkElementId;
 
-                if (this.profiles.TryGetValue(anchor.Url, out StructureDefinition sDef) == false)
+                if (this.TryGetProfile(anchor.Url, out StructureDefinition sDef) == false)
                 {
-                    this.ConversionError("FGrapher",
-                        fcn,
-                        $"Node {sourceNode.NodeName}. Can not find profile '{anchor.Url}'");
+                    this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find profile '{anchor.Url}'");
                     return;
                 }
 
@@ -368,21 +432,23 @@ namespace FGraph
                 ElementDefinition elementDiff = sDef.FindDiffElement(linkElementId);
                 if (elementDiff == null)
                 {
-                    this.ConversionError("FGrapher",
-                        fcn,
-                        $"Node {sourceNode.NodeName}. Can not find profile 'element {linkElementId}' referenced.");
+                    this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find profile 'element {linkElementId}' referenced.");
                     return;
                 }
 
                 ElementDefinition elementSnap = sDef.FindSnapElement(linkElementId);
                 if (elementSnap == null)
+                {
+                    this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
                     return;
+                }
 
                 if (elementDiff.Binding != null)
                 {
                     GraphNode targetNode = new GraphNode(this);
+                    targetNode.HRef = this.HRef(elementDiff.Binding.ValueSet);
                     targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
-                    if (this.valueSets.TryGetValue(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
+                    if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
                     {
                         targetNode.DisplayName = vs.Name;
                     }
@@ -390,6 +456,8 @@ namespace FGraph
                     targetNode.LhsAnnotationText = "bind";
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (binding) {targetNode.NodeName}");
                 }
 
                 if (elementDiff.Pattern != null)
@@ -397,6 +465,8 @@ namespace FGraph
                     GraphNode targetNode = CreateFhirPrimitiveNode("pattern", elementDiff.Pattern);
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (pattern) {targetNode.NodeName}");
                 }
 
                 if (elementDiff.Fixed != null)
@@ -404,6 +474,8 @@ namespace FGraph
                     GraphNode targetNode = CreateFhirPrimitiveNode("fix", elementDiff.Fixed);
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (fixed) {targetNode.NodeName}");
                 }
 
                 foreach (var typeRef in elementDiff.Type)
@@ -411,6 +483,7 @@ namespace FGraph
                     switch (typeRef.Code)
                     {
                         case "Reference":
+                        case "canonical":
                             foreach (String targetRef in typeRef.TargetProfile)
                             {
                                 sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
@@ -418,12 +491,28 @@ namespace FGraph
                                 GraphNode targetNode = GetTargetNode(targetAnchor);
                                 sourceNode.AddChild(link, link.Depth, targetNode);
                                 targetNode.AddParent(link, link.Depth, sourceNode);
+                                if (this.DebugFlag)
+                                    this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (targetProfile) {targetNode.NodeName}");
+                            }
+                            break;
+                        default:
+                            foreach (String targetRef in typeRef.Profile)
+                            {
+                                sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
+                                GraphAnchor targetAnchor = new GraphAnchor(targetRef, null);
+                                GraphNode targetNode = GetTargetNode(targetAnchor);
+                                sourceNode.AddChild(link, link.Depth, targetNode);
+                                targetNode.AddParent(link, link.Depth, sourceNode);
+                                if (this.DebugFlag)
+                                    this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
                             }
                             break;
                     }
                 }
             }
 
+            if (this.DebugFlag)
+                this.ConversionInfo("LinkByReference", $"{link.Source} -> {link.Item}");
             List<GraphNode> sources = FindNamedNodes(link.Source);
             foreach (GraphNode sourceNode in sources)
                 CreateLink(sourceNode, link.Item);
@@ -439,9 +528,10 @@ namespace FGraph
                 targetNode = new GraphNode(this)
                 {
                     NodeName = $"fhir/{targetAnchor.Url.LastUriPart()}",
-                    DisplayName = "{targetAnchor.Url.LastUriPart()}",
-                    CssClass = "fhirResource",
-                    Anchor = targetAnchor
+                    DisplayName = $"{targetAnchor.Url.LastUriPart()}",
+                    CssClass = "fhir",
+                    Anchor = targetAnchor,
+                    HRef = targetAnchor.Url
                 };
                 this.graphNodesByName.Add(targetNode.NodeName, targetNode);
                 if (targetNode.Anchor != null)
@@ -449,9 +539,7 @@ namespace FGraph
                 return targetNode;
             }
 
-            this.ConversionError("FGrapher",
-                "GetTargetNode",
-                $"Can not find target '{targetAnchor.Url}'.");
+            this.ConversionError("GetTargetNode", $"Can not find target '{targetAnchor.Url}'.");
             return null;
         }
 
@@ -464,10 +552,11 @@ namespace FGraph
             List<GraphNode> targets = FindNamedNodes(link.Target);
             if ((sources.Count > 1) && (targets.Count > 1))
             {
-                this.ConversionError("FGrapher",
-                    fcn,
-                    $"Many to many link not supported. {link.Source}' <--> {link.Target}");
+                this.ConversionError(fcn, $"Many to many link not supported. {link.Source}' <--> {link.Target}");
             }
+
+            if (this.DebugFlag)
+                this.ConversionInfo("LinkByName", $"{link.Source} -> {link.Target}");
 
             foreach (GraphNode sourceNode in sources)
             {
@@ -475,16 +564,25 @@ namespace FGraph
                 {
                     sourceNode.AddChild(link, link.Depth, targetNode);
                     targetNode.AddParent(link, link.Depth, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> {targetNode.NodeName}");
                 }
             }
         }
 
         public void SaveAll()
         {
+            if (this.svgEditors.Count == 0)
+                return;
+
+            this.ConversionInfo("SaveAll", $"Writing svg files to {this.outputDir}");
             foreach (SvgEditor svgEditor in this.svgEditors)
             {
                 String fileName = svgEditor.Name.Replace(":", "-");
-                svgEditor.Save($"{this.outputDir}\\{fileName}.svg");
+                String outputFile = $"{this.outputDir}\\{fileName}.svg";
+                svgEditor.Save(outputFile);
+                if (this.DebugFlag)
+                    this.ConversionInfo("SaveAll", $"Writing svg file {outputFile}");
             }
         }
     }

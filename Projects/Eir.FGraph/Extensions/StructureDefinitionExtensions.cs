@@ -18,7 +18,12 @@ namespace FGraph
             return null;
         }
 
-
+        /// <summary>
+        /// Find snapnode element.
+        /// id is a typical fhir ElementDefinition.id except that the first part (up to first '.')
+        /// may be the name of the profile, not he name of the base class.
+        /// Replace with the name of the base class.
+        /// </summary>
         public static ElementDefinition FindSnapElement(this StructureDefinition sd, String id)
         {
             String baseName = sd.BaseDefinition.LastUriPart();
@@ -28,6 +33,18 @@ namespace FGraph
                 normName = baseName + id.Substring(index);
             else
                 normName = baseName;
+            return sd.Snapshot.Element.FindElement(normName);
+        }
+
+        /// <summary>
+        /// Find snapnode element.
+        /// id is a typical fhir ElementDefinition.id except that the first part (part containing base name)
+        /// is missing.
+        /// </summary>
+        public static ElementDefinition FindSnapElementShortName(this StructureDefinition sd, String id)
+        {
+            String baseName = sd.BaseDefinition.LastUriPart();
+            String normName = $"{baseName}.{id}";
             return sd.Snapshot.Element.FindElement(normName);
         }
 

@@ -24,7 +24,7 @@ namespace FGraph
         public static String FhirBaseUrl(this string s)
         {
             s = s.Substring(0, s.LastIndexOf('/'));
-            s = s.Substring(0, s.LastIndexOf('/'));
+            s = s.Substring(0, s.LastIndexOf('/') + 1);
             return s;
         }
     }

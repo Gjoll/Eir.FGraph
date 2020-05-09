@@ -20,6 +20,7 @@ namespace FGraph
             public String graphName { get; set; }
             public String inputPath { get; set; }
             public String outputDir { get; set; }
+            public String baseUrl { get; set; }
             public String[] resourcePaths { get; set; }
             public Rendering[] traversals { get; set; }
         }
@@ -79,24 +80,30 @@ namespace FGraph
 
         bool Process()
         {
-            if (options.outputDir == null)
+            if (String.IsNullOrEmpty(options.outputDir))
                 throw new Exception("Missing 'outputDir' option setting");
             this.fGrapher.OutputDir = options.outputDir;
 
-            if (options.inputPath == null)
+            if (String.IsNullOrEmpty(options.graphName))
+                throw new Exception("Missing 'graphName' option setting");
+            this.fGrapher.GraphName = options.graphName;
+
+            if (String.IsNullOrEmpty(options.baseUrl))
+                throw new Exception("Missing 'baseUrl' option setting");
+            this.fGrapher.BaseUrl = options.baseUrl;
+            if (this.fGrapher.BaseUrl.EndsWith("/") == false)
+                this.fGrapher.BaseUrl += "/";
+
+            foreach (String resourcePath in options.resourcePaths)
+                this.fGrapher.LoadResources(resourcePath);
+
+            if (String.IsNullOrEmpty(options.inputPath))
                 throw new Exception("Missing 'inputPath' option setting");
             this.fGrapher.Load(options.inputPath);
             if (Directory.Exists(options.inputPath))
                 this.inputDir = options.inputPath;
             else
                 this.inputDir = Path.GetDirectoryName(options.inputPath);
-
-            if (options.graphName == null)
-                throw new Exception("Missing 'graphName' option setting");
-            this.fGrapher.GraphName = options.graphName;
-
-            foreach (String resourcePath in options.resourcePaths)
-                this.fGrapher.LoadResources(resourcePath);
 
             this.fGrapher.Process();
             foreach (Options.Rendering rendering in this.options.traversals)
