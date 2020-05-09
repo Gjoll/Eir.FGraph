@@ -50,7 +50,7 @@ namespace FGraph
             seGroupParents.AppendNodes(TraverseParents(focusGraphNode, focusSENode, "focus/*", 1));
             seGroupFocus.AppendChildren(TraverseChildren(focusGraphNode, focusSENode, "focus/*", 1));
 
-            e.Render(seGroupParents, true);
+            e.Render(seGroupParents);
         }
 
         protected SENode CreateNodeBinding(ElementDefinition.ElementDefinitionBindingComponent binding)

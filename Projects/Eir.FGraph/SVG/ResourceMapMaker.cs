@@ -26,7 +26,7 @@ namespace FGraph
         public void Create(String baseUrl, String outputPath)
         {
             SENodeGroup rootGroup = this.CreateNodes(baseUrl);
-            this.SvgEditor.Render(rootGroup, true);
+            this.SvgEditor.Render(rootGroup);
             this.SvgEditor.Save(outputPath);
             this.fc?.Mark(outputPath);
         }

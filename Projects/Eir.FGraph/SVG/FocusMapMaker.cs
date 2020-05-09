@@ -205,7 +205,7 @@ namespace FGraph
             }
 
             //parentsGroup.Sort();
-            e.Render(parentsGroup, true);
+            e.Render(parentsGroup);
             String outputPath = Path.Combine(this.graphicsDir, FocusMapName(focusNode));
             this.fc?.Mark(outputPath);
             e.Save(outputPath);

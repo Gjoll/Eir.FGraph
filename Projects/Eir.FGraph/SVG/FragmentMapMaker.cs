@@ -127,7 +127,7 @@ namespace FGraph
                 parentsGroup.AppendNode(node);
             }
 
-            e.Render(parentsGroup, true);
+            e.Render(parentsGroup);
             String svgName = FragmentMapName(fragmentNode.Focus);
             String outputSvgPath = Path.Combine(this.graphicsDir, svgName);
             this.fc?.Mark(outputSvgPath);

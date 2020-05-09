@@ -114,8 +114,7 @@ namespace FGraph
             return retVal;
         }
 
-        public void Render(SENodeGroup group,
-            bool lineFlag)
+        public void Render(SENodeGroup group)
         {
             if (this.screenX == -1)
                 this.screenX = this.BorderMargin;
@@ -124,7 +123,7 @@ namespace FGraph
 
             List<EndPoint> endConnectors = new List<EndPoint>();
 
-            this.RenderGroup(group, this.screenX, this.screenY, lineFlag, out float width, out float height,
+            this.RenderGroup(group, this.screenX, this.screenY, out float width, out float height,
                 endConnectors);
             this.root.Width = $"{this.ToPx(this.maxX + this.NodeGapLhsX(group) + this.NodeGapRhsX(group))}";
             this.root.Height = $"{this.ToPx(this.maxY + 2 * this.NodeGapY)}";
@@ -134,7 +133,6 @@ namespace FGraph
         void RenderGroup(SENodeGroup group,
             float screenX,
             float screenY,
-            bool lineFlag,
             out float colWidth,
             out float colHeight,
             List<EndPoint> endConnectors)
@@ -145,12 +143,12 @@ namespace FGraph
             // Some groups just contain sub groups (no nodes). Make each group children of this groups parent.
 
             if (group.Nodes.Count() > 0)
-                this.RenderSimpleGroup(group, screenX, screenY, lineFlag, out colWidth, out colHeight, endConnectors);
+                this.RenderSimpleGroup(group, screenX, screenY, out colWidth, out colHeight, endConnectors);
             else if (group.ChildGroups.Count() > 0)
             {
                 foreach (SENodeGroup childGroup in group.ChildGroups)
                 {
-                    this.RenderGroup(childGroup, screenX, screenY, lineFlag, out float tColWidth, out float tColHeight,
+                    this.RenderGroup(childGroup, screenX, screenY, out float tColWidth, out float tColHeight,
                         endConnectors);
                     colHeight += tColHeight;
                     screenY += tColHeight;
@@ -163,7 +161,6 @@ namespace FGraph
         void RenderSimpleGroup(SENodeGroup group,
             float screenX,
             float screenY,
-            bool lineFlag,
             out float colWidth,
             out float colHeight,
             List<EndPoint> endConnectors)
@@ -228,14 +225,13 @@ namespace FGraph
                 this.RenderGroup(child,
                     col2ScreenX,
                     col2ScreenY,
-                    lineFlag,
                     out float col2GroupWidth,
                     out float col2GroupHeight,
                     col2EndConnectors);
                 col2ScreenY += col2GroupHeight;
                 col2Height += col2GroupHeight;
 
-                if ((lineFlag) && (startConnectors.Count > 0))
+                if (startConnectors.Count > 0)
                 {
                     for (Int32 i = 0; i < col2EndConnectors.Count; i++)
                     {
@@ -275,7 +271,7 @@ namespace FGraph
                     this.maxX = col2ScreenX + col2GroupWidth;
             }
 
-            if ((lineFlag) && (endConnectorFlag == true))
+            if (endConnectorFlag == true)
             {
                 foreach (EndPoint stubStart in startConnectors)
                 {
