@@ -140,9 +140,9 @@ namespace FGraph
                 }
             }
 
-            if ((linkToLastGroup) & (group.Children.Count() > 0))
+            if ((linkToLastGroup) & (group.ChildGroups.Count() > 0))
             {
-                SENodeGroup groupChild = group.Children.Last();
+                SENodeGroup groupChild = group.ChildGroups.Last();
                 CreateDirectNode(groupChild);
             }
             else

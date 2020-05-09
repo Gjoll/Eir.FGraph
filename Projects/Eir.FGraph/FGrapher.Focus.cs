@@ -85,7 +85,7 @@ namespace FGraph
             node.Class = graphNode.CssClass;
 
             String displayName = graphNode.DisplayName;
-            Debug.Assert(displayName != "Breast/Radiology/Composition");
+            //Debug.Assert(displayName != "Breast/Radiology/Composition");
 
             foreach (String titlePart in displayName.Split('/'))
             {
@@ -173,13 +173,24 @@ namespace FGraph
             foreach (GraphNode.Link parentLink in focusNode.ParentLinks)
             {
                 if (
+                    (depth >= 0) &&
                     (r.IsMatch(parentLink.Traversal.TraversalName)) &&
                     (parentNodes.Contains(parentLink.Node) == false)
-                    )
+                )
                 {
                     SENode parent = CreateNode(parentLink.Node);
                     yield return parent;
+
+                    //SENode child = CreateNode(parentLink.Node);
+                    //parentContainer.AppendNode(child);
+
+                    //parentContainer.AppendChildren(TraverseChildren(parentLink.Node,
+                    //    child,
+                    //    traversalFilter,
+                    //    depth - parentLink.Depth));
+                    //yield return parentContainer;
                 }
+
             }
         }
 

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace FGraph
 {
-    [DebuggerDisplay("{this.Title} [{this.nodes.Count}/{this.children.Count}]")]
+    [DebuggerDisplay("{this.Title} [{this.nodes.Count}/{this._childGroups.Count}]")]
     public class SENodeGroup
     {
         public String Class { get; set; }
@@ -21,7 +21,7 @@ namespace FGraph
                 if (this.showCardinalities == true)
                     return this.showCardinalities;
 
-                foreach (SENodeGroup child in this.Children)
+                foreach (SENodeGroup child in this.ChildGroups)
                 {
                     if (child.ShowCardinalities == true)
                         return true;
@@ -42,8 +42,8 @@ namespace FGraph
         public IEnumerable<SENode> Nodes => this.nodes;
         List<SENode> nodes = new List<SENode>();
 
-        public IEnumerable<SENodeGroup> Children => this.children;
-        List<SENodeGroup> children = new List<SENodeGroup>();
+        public IEnumerable<SENodeGroup> ChildGroups => this._childGroups;
+        List<SENodeGroup> _childGroups = new List<SENodeGroup>();
 
         public SENodeGroup(String title, bool showCardinalities)
         {
@@ -60,8 +60,8 @@ namespace FGraph
         public void Sort()
         {
             this.nodes.Sort((a, b) => a.AllText().CompareTo(b.AllText()));
-            this.children.Sort((a, b) => a.Title.CompareTo(b.Title));
-            foreach (SENodeGroup child in this.children)
+            this._childGroups.Sort((a, b) => a.Title.CompareTo(b.Title));
+            foreach (SENodeGroup child in this._childGroups)
                 child.Sort();
         }
 
@@ -78,18 +78,18 @@ namespace FGraph
 
         public void AppendChild(SENodeGroup nodeGroup)
         {
-            this.children.Add(nodeGroup);
+            this._childGroups.Add(nodeGroup);
         }
 
         public void AppendChildren(IEnumerable<SENodeGroup> nodeGroups)
         {
-            this.children.AddRange(nodeGroups);
+            this._childGroups.AddRange(nodeGroups);
         }
 
         public SENodeGroup AppendChild(String title, bool showCardinality)
         {
             SENodeGroup retVal = new SENodeGroup(title, showCardinality);
-            this.children.Add(retVal);
+            this._childGroups.Add(retVal);
             return retVal;
         }
     }

@@ -176,11 +176,12 @@ namespace FGraph
             colWidth = 0;
             colHeight = 0;
 
+            // Some groups just contain sub groups. Some contain nodes and sub groups of those nodes.
             if (group.Nodes.Count() > 0)
                 this.RenderSimpleGroup(group, screenX, screenY, lineFlag, out colWidth, out colHeight, endConnectors);
-            else if (group.Children.Count() > 0)
+            else if (group.ChildGroups.Count() > 0)
             {
-                foreach (SENodeGroup childGroup in group.Children)
+                foreach (SENodeGroup childGroup in group.ChildGroups)
                 {
                     this.RenderGroup(childGroup, screenX, screenY, lineFlag, out float tColWidth, out float tColHeight,
                         endConnectors);
@@ -251,7 +252,7 @@ namespace FGraph
 
             float col2Height = 0;
             bool endConnectorFlag = false;
-            foreach (SENodeGroup child in group.Children)
+            foreach (SENodeGroup child in group.ChildGroups)
             {
                 List<EndPoint> col2EndConnectors = new List<EndPoint>();
 
@@ -317,7 +318,7 @@ namespace FGraph
                 }
 
                 // Make vertical line that connects all stubs.
-                if (group.Children.Count() > 0)
+                if (group.ChildGroups.Count() > 0)
                 {
                     float x = screenX + col1Width + this.NodeGapStartX(group);
                     this.CreateLine(g, x, topConnectorY, x, bottomConnectorY);
