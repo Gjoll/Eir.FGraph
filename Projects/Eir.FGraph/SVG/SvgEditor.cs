@@ -45,8 +45,8 @@ namespace FGraph
         float screenX = -1;
         float screenY = -1;
 
-        float maxWidth = 0;
-        float maxHeight = 0;
+        float maxX = 0;
+        float maxY = 0;
 
         public SvgEditor(String name)
         {
@@ -128,41 +128,9 @@ namespace FGraph
 
             this.RenderGroup(group, this.screenX, this.screenY, lineFlag, out float width, out float height,
                 endConnectors);
-            this.root.Width = $"{this.ToPx(this.maxWidth + this.NodeGapStartX(group) + this.NodeGapEndX(group))}";
-            this.root.Height = $"{this.ToPx(this.maxHeight + 2 * this.NodeGapY)}";
-            this.screenY = this.maxHeight + 4 * this.BorderMargin;
-        }
-
-        void CreateArrow(SvgGroup g,
-            bool startMarker,
-            bool endMarker,
-            float xStart,
-            float yStart,
-            float xEnd,
-            float yEnd)
-        {
-            SvgLine stub = this.doc.AddLine(g);
-            stub.Stroke = Color.Black;
-            stub.X1 = this.ToPx(xStart);
-            stub.X2 = this.ToPx(xEnd);
-            stub.Y1 = this.ToPx(yStart);
-            stub.Y2 = this.ToPx(yEnd);
-            stub.StrokeWidth = this.ToPx(this.BorderWidth);
-            if (startMarker)
-                stub.MarkerStart = $"url(#{ArrowStart})";
-            if (endMarker)
-                stub.MarkerEnd = $"url(#{ArrowEnd})";
-        }
-
-        void CreateLine(SvgGroup g, float x1, float y1, float x2, float y2)
-        {
-            SvgLine stub = this.doc.AddLine(g);
-            stub.Stroke = Color.Black;
-            stub.X1 = this.ToPx(x1);
-            stub.X2 = this.ToPx(x2);
-            stub.Y1 = this.ToPx(y1);
-            stub.Y2 = this.ToPx(y2);
-            stub.StrokeWidth = this.ToPx(this.BorderWidth);
+            this.root.Width = $"{this.ToPx(this.maxX + this.NodeGapStartX(group) + this.NodeGapEndX(group))}";
+            this.root.Height = $"{this.ToPx(this.maxY + 2 * this.NodeGapY)}";
+            this.screenY = this.maxY + 4 * this.BorderMargin;
         }
 
         void RenderGroup(SENodeGroup group,
@@ -176,7 +144,16 @@ namespace FGraph
             colWidth = 0;
             colHeight = 0;
 
-            // Some groups just contain sub groups. Some contain nodes and sub groups of those nodes.
+            // Some groups just contain sub groups. Some contain sub groups.
+            // None should contain both.
+            if (
+                (group.Nodes.Count() > 0) &&
+                (group.ChildGroups.Count() > 0)
+            )
+            {
+                throw new Exception($"Group contains both nodes and child groups");
+            }
+
             if (group.Nodes.Count() > 0)
                 this.RenderSimpleGroup(group, screenX, screenY, lineFlag, out colWidth, out colHeight, endConnectors);
             else if (group.ChildGroups.Count() > 0)
@@ -242,10 +219,10 @@ namespace FGraph
                 col1ScreenY += nodeHeight + this.NodeGapY;
             }
 
-            if (this.maxWidth < col1ScreenX + col1Width)
-                this.maxWidth = col1ScreenX + col1Width;
-            if (this.maxHeight < col1ScreenY)
-                this.maxHeight = col1ScreenY;
+            if (this.maxX < col1ScreenX + col1Width)
+                this.maxX = col1ScreenX + col1Width;
+            if (this.maxY < col1ScreenY)
+                this.maxY = col1ScreenY;
 
             float col2ScreenX = screenX + col1Width + this.NodeGapStartX(group) + this.NodeGapEndX(group);
             float col2ScreenY = screenY;
@@ -296,8 +273,8 @@ namespace FGraph
                 if (colWidth < width)
                     colWidth = width;
 
-                if (this.maxWidth < col2ScreenX + col2GroupWidth)
-                    this.maxWidth = col2ScreenX + col2GroupWidth;
+                if (this.maxX < col2ScreenX + col2GroupWidth)
+                    this.maxX = col2ScreenX + col2GroupWidth;
             }
 
             if ((lineFlag) && (endConnectorFlag == true))
@@ -325,8 +302,8 @@ namespace FGraph
                 }
             }
 
-            if (this.maxHeight < col2ScreenY)
-                this.maxHeight = col2ScreenY;
+            if (this.maxY < col2ScreenY)
+                this.maxY = col2ScreenY;
 
             if (colHeight < col1Height)
                 colHeight = col1Height;
@@ -439,5 +416,39 @@ namespace FGraph
                 File.Copy(cssFile, Path.Combine(outputDir, Path.GetFileName(cssFile)));
             }
         }
+
+        void CreateArrow(SvgGroup g,
+            bool startMarker,
+            bool endMarker,
+            float xStart,
+            float yStart,
+            float xEnd,
+            float yEnd)
+        {
+            SvgLine stub = this.doc.AddLine(g);
+            stub.Stroke = Color.Black;
+            stub.X1 = this.ToPx(xStart);
+            stub.X2 = this.ToPx(xEnd);
+            stub.Y1 = this.ToPx(yStart);
+            stub.Y2 = this.ToPx(yEnd);
+            stub.StrokeWidth = this.ToPx(this.BorderWidth);
+            if (startMarker)
+                stub.MarkerStart = $"url(#{ArrowStart})";
+            if (endMarker)
+                stub.MarkerEnd = $"url(#{ArrowEnd})";
+        }
+
+        void CreateLine(SvgGroup g, float x1, float y1, float x2, float y2)
+        {
+            SvgLine stub = this.doc.AddLine(g);
+            stub.Stroke = Color.Black;
+            stub.X1 = this.ToPx(x1);
+            stub.X2 = this.ToPx(x2);
+            stub.Y1 = this.ToPx(y1);
+            stub.Y2 = this.ToPx(y2);
+            stub.StrokeWidth = this.ToPx(this.BorderWidth);
+        }
+
+
     }
 }
