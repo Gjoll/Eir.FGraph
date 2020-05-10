@@ -6,13 +6,14 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{905310DF-3C36-47E7-BD0B-56BB21AD92BD}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eir.FGraph", "Projects\Eir.FGraph\Eir.FGraph.csproj", "{49DD7C70-B51C-453D-A7CD-DCEF7A58B876}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eir.FGraph", "Projects\Eir.FGraph\Eir.FGraph.csproj", "{49DD7C70-B51C-453D-A7CD-DCEF7A58B876}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eir.FGraph.Tests", "Projects\Eir.FGraph.tests\Eir.FGraph.Tests.csproj", "{D8495428-5548-4AFA-8952-C517B5F9E0CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SVGLib", "Projects\SVGLib\SVGLib.csproj", "{43B7A044-2909-48C9-AD09-707709CDFE46}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SVGLib", "Projects\SVGLib\SVGLib.csproj", "{43B7A044-2909-48C9-AD09-707709CDFE46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -164,6 +164,8 @@ namespace FGraph
             String traversalFilter,
             Int32 depth)
         {
+            const String fcn = "TraverseParents";
+
             Regex r = new Regex(traversalFilter);
 
             HashSet<GraphNode> parentNodes = new HashSet<GraphNode>();
@@ -178,7 +180,22 @@ namespace FGraph
                     (parentNodes.Contains(parentLink.Node) == false)
                 )
                 {
-                    SENode parent = CreateNode(parentLink.Node);
+                    var parentNode = parentLink.Node;
+
+                    // we want to link to top level parent, not element node.
+                    while (parentNode.Anchor.Item != null)
+                    {
+                        if (parentNode.ParentLinks.Count != 1)
+                        {
+                            this.ConversionError("FGrapher", fcn, $"Anchor is null");
+                            break;
+                        }
+                        else
+                        {
+                            parentNode = parentNode.ParentLinks[0].Node;
+                        }
+                    }
+                    SENode parent = CreateNode(parentNode);
                     yield return parent;
 
                     //SENode child = CreateNode(parentLink.Node);
