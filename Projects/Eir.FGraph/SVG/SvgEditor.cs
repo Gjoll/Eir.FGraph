@@ -16,7 +16,7 @@ namespace FGraph
             public PointF Location { get; set; }
             public String Annotation { get; set; }
         }
-        
+
         const Int32 MinXGap = 2;
         const String ArrowStart = "arrowStart";
         const String ArrowEnd = "arrowEnd";
@@ -32,6 +32,7 @@ namespace FGraph
         public float LineHeight { get; set; } = 1.25f;
         public float BorderMargin { get; set; } = 0.5f;
         public float NodeGapY { get; set; } = 0.5f;
+        public float NodeGapX { get; set; } = 0.5f;
         public float RectRx { get; set; } = 0.25f;
         public float RectRy { get; set; } = 0.25f;
 
@@ -42,7 +43,9 @@ namespace FGraph
         float screenX = -1;
         float screenY = -1;
 
+        float minX = 0;
         float maxX = 0;
+        float minY = 0;
         float maxY = 0;
 
         public SvgEditor(String name)
@@ -116,17 +119,19 @@ namespace FGraph
 
         public void Render(SENodeGroup group)
         {
-            if (this.screenX == -1)
-                this.screenX = this.BorderMargin;
-            if (this.screenY == -1)
-                this.screenY = this.BorderMargin;
+            this.minX = 0;
+            this.minY = 0;
+            this.screenX = this.minX + this.BorderMargin;
+            this.screenY = this.minY + this.BorderMargin;
 
             List<EndPoint> endConnectors = new List<EndPoint>();
 
             this.RenderGroup(group, this.screenX, this.screenY, out float width, out float height,
                 endConnectors);
-            this.root.Width = $"{this.ToPx(this.maxX + this.NodeGapLhsX(group) + this.NodeGapRhsX(group))}";
-            this.root.Height = $"{this.ToPx(this.maxY + 2 * this.NodeGapY)}";
+            float totalWidth = this.maxX - this.minX;
+            float totalHeight = this.maxY - this.minY;
+            this.root.Width = $"{this.ToPx(totalWidth) + 2 * this.NodeGapX}";
+            this.root.Height = $"{this.ToPx(totalHeight + 2 * this.NodeGapY)}";
             this.screenY = this.maxY + 4 * this.BorderMargin;
         }
 
@@ -339,12 +344,12 @@ namespace FGraph
             if (colHeight < col2Height)
                 colHeight = col2Height;
         }
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
         String GetClass(params String[] cssClassNames)
         {
             foreach (String cssClassName in cssClassNames)
