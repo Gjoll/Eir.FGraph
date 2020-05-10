@@ -480,7 +480,7 @@ namespace FGraph
                         this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (fixed) {targetNode.NodeName}");
                 }
 
-                foreach (var typeRef in elementDiff.Type)
+                foreach (ElementDefinition.TypeRefComponent typeRef in elementSnap.Type)
                 {
                     switch (typeRef.Code)
                     {

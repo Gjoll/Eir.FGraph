@@ -6,7 +6,7 @@ Fhir SVG Graphic Generator for Implementation Guides
 
 dotnet tool install --global Eir.FGraph --version {version>
 
-e.g. dotnet tool install --global Eir.FGraph --version 1.3.1
+e.g. dotnet tool install --global Eir.FGraph --version 1.3.2
 
 
 ## Command Line Option
