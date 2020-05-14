@@ -130,7 +130,7 @@ namespace FGraph
                 endConnectors);
             float totalWidth = this.maxX - this.minX;
             float totalHeight = this.maxY - this.minY;
-            this.root.Width = $"{this.ToPx(totalWidth) + 2 * this.NodeGapX}";
+            this.root.Width = $"{this.ToPx(totalWidth) + 2 * this.NodeGapX + this.BorderWidth + 1}";
             this.root.Height = $"{this.ToPx(totalHeight + 2 * this.NodeGapY)}";
             this.screenY = this.maxY + 4 * this.BorderMargin;
         }

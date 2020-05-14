@@ -167,10 +167,13 @@ namespace FGraph
         {
             using (StreamReader r = new StreamReader(path))
             {
-                string json = r.ReadToEnd();
+                StringBuilder json = new StringBuilder();
+                json.AppendLine("[");
+                json.AppendLine(r.ReadToEnd());
+                json.AppendLine("]");
                 try
                 {
-                    JArray array = JsonConvert.DeserializeObject<JArray>(json);
+                    JArray array = JsonConvert.DeserializeObject<JArray>(json.ToString());
                     foreach (var item in array)
                         LoadItem(item);
                 }
