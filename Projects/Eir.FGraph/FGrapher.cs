@@ -192,12 +192,60 @@ namespace FGraph
                 LoadItem(kvp.Key, kvp.Value);
         }
 
-        void SetHRefFromAnchor(GraphNode node)
+        void SetAnchor(GraphNode node)
         {
+            const String fcn = "SetAnchor";
+
             if (node.Anchor == null)
                 return;
+
             String hRef = this.HRef(node.Anchor.Url, node.Anchor.Item);
             node.HRef = hRef;
+
+            if (this.TryGetProfile(node.Anchor.Url, out StructureDefinition sDef) == true)
+            {
+                node.SDef = sDef;
+
+                String linkElementId = node.Anchor.Item;
+                /*
+                 * If link element is is null or starts with '.', then prepend the anchor item id to it.
+                 */
+                if (
+                    (String.IsNullOrEmpty(linkElementId)) ||
+                    (linkElementId.StartsWith("."))
+                )
+                    linkElementId = node.Anchor.Item + linkElementId;
+
+                if (node.SDef == null)
+                {
+                    this.ConversionError(fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
+                    return;
+                }
+
+                // put in base path part (i.e. SnapShot.Element[0])
+                {
+                    String id = node.SDef.BaseDefinition.LastUriPart();
+                    if (String.IsNullOrEmpty(linkElementId) == false)
+                    {
+                        id += ".";
+                        id += linkElementId;
+                    }
+
+                    linkElementId = id;
+                }
+
+                ElementDefinition elementDiff = node.SDef.FindDiffElement(linkElementId);
+                ElementDefinition elementSnap = node.SDef.FindSnapElement(linkElementId);
+                if (elementSnap == null)
+                {
+                    this.ConversionError(fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
+                    return;
+                }
+
+                node.ElementId = linkElementId;
+                node.ElementSnap = elementSnap;
+                node.ElementDiff = elementDiff;
+            }
         }
 
         public void LoadItem(String type, JToken value)
@@ -207,7 +255,7 @@ namespace FGraph
                 case "graphNode":
                     {
                         GraphNode node = new GraphNode(this, value);
-                        this.SetHRefFromAnchor(node);
+                        this.SetAnchor(node);
                         this.graphNodesByName.Add(node.NodeName, node);
                         if (node.Anchor != null)
                             this.graphNodesByAnchor.Add(node.Anchor, node);
@@ -217,6 +265,13 @@ namespace FGraph
                 case "graphLinkByReference":
                     {
                         GraphLinkByReference link = new GraphLinkByReference(this, value);
+                        this.graphLinks.Add(link);
+                    }
+                    break;
+
+                case "graphLinkByBinding":
+                    {
+                        GraphLinkByBinding link = new GraphLinkByBinding(this, value);
                         this.graphLinks.Add(link);
                     }
                     break;
@@ -329,6 +384,10 @@ namespace FGraph
         {
             switch (link)
             {
+                case GraphLinkByBinding linkByBinding:
+                    ProcessLink(linkByBinding);
+                    break;
+
                 case GraphLinkByName linkByName:
                     ProcessLink(linkByName);
                     break;
@@ -345,16 +404,10 @@ namespace FGraph
         GraphNode CreateFhirPrimitiveNode(String type,
             Element fhirElement)
         {
-            String System(String system)
-            {
-                if (system.StartsWith("http://"))
-                    system = system.Substring(7);
-                else if (system.StartsWith("https://"))
-                    system = system.Substring(8);
-                return system;
-            }
+            String System(String system) => system.LastUriPart();
 
             GraphNode targetNode = new GraphNode(this);
+            targetNode.CssClass = "value";
             targetNode.LhsAnnotationText = $"{type} ";
 
             switch (fhirElement)
@@ -362,7 +415,7 @@ namespace FGraph
                 case CodeableConcept codeableConcept:
                     {
                         String system = System(codeableConcept.Coding[0].System);
-                        targetNode.DisplayName += $"{codeableConcept.Coding[0].Code}/{system}";
+                        targetNode.DisplayName += $"{system}#{codeableConcept.Coding[0].Code}";
                         targetNode.HRef = codeableConcept.Coding[0].System;
                     }
                     break;
@@ -370,7 +423,7 @@ namespace FGraph
                 case Coding coding:
                     {
                         String system = System(coding.System);
-                        targetNode.DisplayName += $"{coding.Code}/{system}";
+                        targetNode.DisplayName += $"{system}#{coding.Code}";
                         targetNode.HRef = coding.System;
                     }
                     break;
@@ -399,89 +452,67 @@ namespace FGraph
             return targetNode;
         }
 
+        bool TryGetChildElement(GraphNode sourceNode,
+            String linkElementId,
+            out ElementDefinition elementDiff,
+            out ElementDefinition elementSnap)
+        {
+            const String fcn = "GetChildElement";
+
+            elementDiff = null;
+            elementSnap = null;
+
+            if (sourceNode.Anchor == null)
+            {
+                this.ConversionError(fcn, $"Node {sourceNode.NodeName} anchor is null");
+                return false;
+            }
+
+            /*
+             * If link element is is null or starts with '.', then prepend the anchor item id to it.
+             */
+            if (String.IsNullOrEmpty(linkElementId))
+            {
+                linkElementId = $"{sourceNode.ElementId}";
+            }
+            else if (linkElementId.StartsWith("."))
+            {
+                linkElementId = $"{sourceNode.ElementId}{linkElementId}";
+            }
+
+            if (sourceNode.SDef == null)
+            {
+                this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
+                return false;
+            }
+
+            elementDiff = sourceNode.SDef.FindDiffElement(linkElementId);
+            if (elementDiff == null)
+                return false;
+
+            elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
+            if (elementSnap == null)
+            {
+                this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
+                return false;
+            }
+
+            return true;
+        }
 
         void ProcessLink(GraphLinkByReference link)
         {
             const String fcn = "ProcessLink";
 
-            void CreateLink(GraphNode sourceNode,
+            void ProcessNode(GraphNode sourceNode,
                 String linkElementId)
             {
                 if (this.DebugFlag)
                     this.ConversionInfo("", $"{sourceNode} -> {linkElementId}");
-
-                GraphAnchor anchor = sourceNode.Anchor;
-                if (anchor == null)
-                {
-                    this.ConversionError(fcn, $"Node {sourceNode.NodeName} anchor is null");
+                ElementDefinition elementDiff;
+                ElementDefinition elementSnap;
+                if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
                     return;
-                }
-
-                /*
-                 * If link element is is null or starts with '.', then prepend the anchor item id to it.
-                 */
-                if (
-                    (String.IsNullOrEmpty(linkElementId)) ||
-                    (linkElementId.StartsWith("."))
-                )
-                    linkElementId = anchor.Item + linkElementId;
-
-                if (this.TryGetProfile(anchor.Url, out StructureDefinition sDef) == false)
-                {
-                    this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find profile '{anchor.Url}'");
-                    return;
-                }
-
-                // put in base path part (i.e. SnapShot.Element[0])
-                linkElementId = $"{sDef.BaseDefinition.LastUriPart()}.{linkElementId}";
-                ElementDefinition elementDiff = sDef.FindDiffElement(linkElementId);
-                if (elementDiff == null)
-                {
-                    this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find profile 'element {linkElementId}' referenced.");
-                    return;
-                }
-
-                ElementDefinition elementSnap = sDef.FindSnapElement(linkElementId);
-                if (elementSnap == null)
-                {
-                    this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
-                    return;
-                }
-
-                if (elementDiff.Binding != null)
-                {
-                    GraphNode targetNode = new GraphNode(this);
-                    targetNode.HRef = this.HRef(elementDiff.Binding.ValueSet);
-                    targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
-                    if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
-                    {
-                        targetNode.DisplayName = vs.Name;
-                    }
-                    targetNode.DisplayName += "/ValueSet";
-                    targetNode.LhsAnnotationText = "bind";
-                    sourceNode.AddChild(link, 0, targetNode);
-                    targetNode.AddParent(link, 0, sourceNode);
-                    if (this.DebugFlag)
-                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (binding) {targetNode.NodeName}");
-                }
-
-                if (elementDiff.Pattern != null)
-                {
-                    GraphNode targetNode = CreateFhirPrimitiveNode("pattern", elementDiff.Pattern);
-                    sourceNode.AddChild(link, 0, targetNode);
-                    targetNode.AddParent(link, 0, sourceNode);
-                    if (this.DebugFlag)
-                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (pattern) {targetNode.NodeName}");
-                }
-
-                if (elementDiff.Fixed != null)
-                {
-                    GraphNode targetNode = CreateFhirPrimitiveNode("fix", elementDiff.Fixed);
-                    sourceNode.AddChild(link, 0, targetNode);
-                    targetNode.AddParent(link, 0, sourceNode);
-                    if (this.DebugFlag)
-                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (fixed) {targetNode.NodeName}");
-                }
 
                 foreach (ElementDefinition.TypeRefComponent typeRef in elementSnap.Type)
                 {
@@ -520,7 +551,7 @@ namespace FGraph
                 this.ConversionInfo("LinkByReference", $"{link.Source} -> {link.Item}");
             List<GraphNode> sources = FindNamedNodes(link.Source);
             foreach (GraphNode sourceNode in sources)
-                CreateLink(sourceNode, link.Item);
+                ProcessNode(sourceNode, link.Item);
         }
 
         GraphNode GetTargetNode(GraphAnchor targetAnchor)
@@ -575,6 +606,66 @@ namespace FGraph
             }
         }
 
+
+
+        void ProcessLink(GraphLinkByBinding link)
+        {
+            const String fcn = "ProcessLink";
+
+            void ProcessNode(GraphNode sourceNode,
+                String linkElementId)
+            {
+                ElementDefinition elementDiff;
+                ElementDefinition elementSnap;
+                if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
+                    return;
+
+                if (sourceNode.ElementDiff.Binding != null)
+                {
+                    GraphNode targetNode = new GraphNode(this);
+                    targetNode.HRef = this.HRef(elementDiff.Binding.ValueSet);
+                    targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
+                    if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
+                    {
+                        targetNode.DisplayName = vs.Name;
+                    }
+                    targetNode.DisplayName += "/ValueSet";
+                    targetNode.LhsAnnotationText = "bind";
+                    sourceNode.AddChild(link, 0, targetNode);
+                    targetNode.AddParent(link, 0, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (binding) {targetNode.NodeName}");
+                }
+
+                if (elementDiff.Pattern != null)
+                {
+                    GraphNode targetNode = CreateFhirPrimitiveNode("pattern", elementDiff.Pattern);
+                    sourceNode.AddChild(link, 0, targetNode);
+                    targetNode.AddParent(link, 0, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (pattern) {targetNode.NodeName}");
+                }
+
+                if (elementDiff.Fixed != null)
+                {
+                    GraphNode targetNode = CreateFhirPrimitiveNode("fix", elementDiff.Fixed);
+                    sourceNode.AddChild(link, 0, targetNode);
+                    targetNode.AddParent(link, 0, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (fixed) {targetNode.NodeName}");
+                }
+            }
+
+            List<GraphNode> sources = FindNamedNodes(link.Source);
+
+            if (this.DebugFlag)
+                this.ConversionInfo("LinkByBinding", $"{link.Source}");
+
+            foreach (GraphNode sourceNode in sources)
+                ProcessNode(sourceNode, link.Item);
+        }
+
+
         public void SaveAll()
         {
             if (this.svgEditors.Count == 0)
@@ -590,5 +681,6 @@ namespace FGraph
                     this.ConversionInfo("SaveAll", $"Writing svg file {outputFile}");
             }
         }
+
     }
 }

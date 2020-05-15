@@ -62,6 +62,26 @@ namespace FGraph
         /// </summary>
         public String RhsAnnotationText { get; set; }
 
+        /// <summary>
+        /// If anchor points to a profile, this is the profile.
+        /// </summary>
+        public StructureDefinition SDef { get; set; } = null;
+
+        /// <summary>
+        /// If anchor points to an element definition in a profile, this is the snapshot element.
+        /// </summary>
+        public ElementDefinition ElementSnap { get; set; } = null;
+
+        /// <summary>
+        /// Full element id (if sdef)
+        /// </summary>
+        public String ElementId { get; set; }
+
+        /// <summary>
+        /// If anchor points to an element definition in a profile, this is the differential element.
+        /// </summary>
+        public ElementDefinition ElementDiff { get; set; } = null;
+
         public GraphNode(FGrapher fGraph) : base(fGraph)
         {
         }
