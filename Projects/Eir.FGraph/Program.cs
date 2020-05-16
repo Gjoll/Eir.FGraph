@@ -23,6 +23,9 @@ namespace FGraph
             public String baseUrl { get; set; }
             public String[] resourcePaths { get; set; }
             public Rendering[] traversals { get; set; }
+            public String cssBinding { get; set; }
+            public String cssFix { get; set; }
+            public String cssPattern { get; set; }
         }
 
         FGrapher fGrapher;
@@ -87,6 +90,15 @@ namespace FGraph
             if (String.IsNullOrEmpty(options.graphName))
                 throw new Exception("Missing 'graphName' option setting");
             this.fGrapher.GraphName = options.graphName;
+
+            if (String.IsNullOrEmpty(options.cssBinding) == false)
+                this.fGrapher.BindingNode_CssClass = options.cssBinding;
+
+            if (String.IsNullOrEmpty(options.cssFix) == false)
+                this.fGrapher.FixNode_CssClass = options.cssFix;
+
+            if (String.IsNullOrEmpty(options.cssPattern) == false)
+                this.fGrapher.PatternNode_CssClass = options.cssPattern;
 
             if (String.IsNullOrEmpty(options.baseUrl))
                 throw new Exception("Missing 'baseUrl' option setting");

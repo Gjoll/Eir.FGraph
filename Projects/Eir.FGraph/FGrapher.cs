@@ -18,6 +18,12 @@ namespace FGraph
 {
     public partial class FGrapher : ConverterBase
     {
+        public String FhirResourceNode_CssClass = "fhir";
+        public String BindingNode_CssClass = "valueSet";
+        public String FixNode_CssClass = "value";
+        public String PatternNode_CssClass = "value";
+
+        public bool ShowClass { get; set; } = true;
         public string GraphName { get; set; } = null;
 
         public string BaseUrl { get; set; }
@@ -331,7 +337,7 @@ namespace FGraph
                         ElementDefinition elementSnap = sDef.FindSnapElementShortName(item);
                         if (elementSnap == null)
                         {
-                            this.ConversionError("HRef", $"Snapshot node ..{item} not found");
+                            this.ConversionError("HRef", $"Snapshot node {sDef.Name}.{item} not found");
                             return null;
                         }
                         return $"{parts[0]}-{parts[1]}-definitions.html#{elementSnap.ElementId}";
@@ -402,12 +408,12 @@ namespace FGraph
         }
 
         GraphNode CreateFhirPrimitiveNode(String type,
-            Element fhirElement)
+            Element fhirElement,
+            String cssClass)
         {
             String System(String system) => system.LastUriPart();
 
-            GraphNode targetNode = new GraphNode(this);
-            targetNode.CssClass = "value";
+            GraphNode targetNode = new GraphNode(this, cssClass);
             targetNode.LhsAnnotationText = $"{type} ";
 
             switch (fhirElement)
@@ -502,7 +508,7 @@ namespace FGraph
 
         void ProcessLink(GraphLinkByReference link)
         {
-            const String fcn = "ProcessLink";
+            //const String fcn = "ProcessLink";
 
             void ProcessNode(GraphNode sourceNode,
                 String linkElementId)
@@ -561,11 +567,10 @@ namespace FGraph
 
             if (targetAnchor.Url.StartsWith("http://hl7.org/fhir"))
             {
-                targetNode = new GraphNode(this)
+                targetNode = new GraphNode(this, FhirResourceNode_CssClass)
                 {
                     NodeName = $"fhir/{targetAnchor.Url.LastUriPart()}",
                     DisplayName = $"{targetAnchor.Url.LastUriPart()}",
-                    CssClass = "fhir",
                     Anchor = targetAnchor,
                     HRef = targetAnchor.Url
                 };
@@ -606,11 +611,9 @@ namespace FGraph
             }
         }
 
-
-
         void ProcessLink(GraphLinkByBinding link)
         {
-            const String fcn = "ProcessLink";
+            //const String fcn = "ProcessLink";
 
             void ProcessNode(GraphNode sourceNode,
                 String linkElementId)
@@ -620,9 +623,9 @@ namespace FGraph
                 if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
                     return;
 
-                if (sourceNode.ElementDiff.Binding != null)
+                if (elementDiff.Binding != null)
                 {
-                    GraphNode targetNode = new GraphNode(this);
+                    GraphNode targetNode = new GraphNode(this, BindingNode_CssClass);
                     targetNode.HRef = this.HRef(elementDiff.Binding.ValueSet);
                     targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
                     if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
@@ -639,7 +642,7 @@ namespace FGraph
 
                 if (elementDiff.Pattern != null)
                 {
-                    GraphNode targetNode = CreateFhirPrimitiveNode("pattern", elementDiff.Pattern);
+                    GraphNode targetNode = CreateFhirPrimitiveNode("pattern", elementDiff.Pattern, PatternNode_CssClass);
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
                     if (this.DebugFlag)
@@ -648,7 +651,7 @@ namespace FGraph
 
                 if (elementDiff.Fixed != null)
                 {
-                    GraphNode targetNode = CreateFhirPrimitiveNode("fix", elementDiff.Fixed);
+                    GraphNode targetNode = CreateFhirPrimitiveNode("fix", elementDiff.Fixed, FixNode_CssClass);
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
                     if (this.DebugFlag)

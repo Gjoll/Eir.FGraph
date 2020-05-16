@@ -10,6 +10,8 @@ namespace FGraph
     [DebuggerDisplay("{NodeName}")]
     public class GraphNode : GraphItem
     {
+        public Guid NodeGuid { get; } = Guid.NewGuid();
+
         /// <summary>
         /// Class that defines links to/from this node.
         /// </summary>
@@ -82,8 +84,9 @@ namespace FGraph
         /// </summary>
         public ElementDefinition ElementDiff { get; set; } = null;
 
-        public GraphNode(FGrapher fGraph) : base(fGraph)
+        public GraphNode(FGrapher fGraph, String cssClass) : base(fGraph)
         {
+            this.CssClass = cssClass;
         }
 
 
@@ -101,8 +104,19 @@ namespace FGraph
             }
         }
 
+        bool AlreadyLinked(IEnumerable<Link> links, GraphNode node)
+        {
+            foreach (Link link in links)
+                if (link.Node == node)
+                    return true;
+            return false;
+        }
+
         public void AddChild(GraphLink gLink, Int32 depth, GraphNode child)
         {
+            if (AlreadyLinked(this.ChildLinks, child))
+                return;
+
             Link link = new Link
             {
                 Node = child,
@@ -114,6 +128,9 @@ namespace FGraph
 
         public void AddParent(GraphLink gLink, Int32 depth, GraphNode parent)
         {
+            if (AlreadyLinked(this.ParentLinks, parent))
+                return;
+
             Link link = new Link
             {
                 Node = parent,
