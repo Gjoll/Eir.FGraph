@@ -310,46 +310,48 @@ namespace FGraph
 
         protected String HRef(String url, String item = null)
         {
+            const String fcn = "HRef";
+
             if (url.StartsWith("http://hl7.org/fhir/StructureDefinition/"))
                 return url;
 
-            if (url.StartsWith(this.BaseUrl))
+            if (url.StartsWith(this.BaseUrl) == false)
             {
-                String nonBasePart = url.Substring(this.BaseUrl.Length);
-                if (nonBasePart.StartsWith("/"))
-                    nonBasePart = nonBasePart.Substring(1);
-                String[] parts = nonBasePart.Split('/');
-                if (parts.Length != 2)
-                    throw new Exception($"Invalid url parts {nonBasePart}");
-
-                if (String.IsNullOrEmpty(item) == true)
-                    return $"{parts[0]}-{parts[1]}.html";
-
-                if (this.TryGetResource<DomainResource>(url, out DomainResource resource) == false)
-                {
-                    this.ConversionError("HRef", "Resource {url} not found");
-                    return null;
-                }
-
-                switch (resource)
-                {
-                    case StructureDefinition sDef:
-                        ElementDefinition elementSnap = sDef.FindSnapElementShortName(item);
-                        if (elementSnap == null)
-                        {
-                            this.ConversionError("HRef", $"Snapshot node {sDef.Name}.{item} not found");
-                            return null;
-                        }
-                        return $"{parts[0]}-{parts[1]}-definitions.html#{elementSnap.ElementId}";
-
-                    default:
-                        this.ConversionError("HRef", $"Resource type '{resource.GetType().Name}' not implemented ");
-                        return null;
-                }
+                this.ConversionWarn(fcn, $"Url '{url}' base is not fhir and is not {this.BaseUrl}");
+                return "";
             }
 
-            this.ConversionWarn("HRef", "Unknown url");
-            return "";
+            String nonBasePart = url.Substring(this.BaseUrl.Length);
+            if (nonBasePart.StartsWith("/"))
+                nonBasePart = nonBasePart.Substring(1);
+            String[] parts = nonBasePart.Split('/');
+            if (parts.Length != 2)
+                throw new Exception($"Invalid url parts {nonBasePart}");
+
+            if (String.IsNullOrEmpty(item) == true)
+                return $"{parts[0]}-{parts[1]}.html";
+
+            if (this.TryGetResource<DomainResource>(url, out DomainResource resource) == false)
+            {
+                this.ConversionError(fcn, "Resource {url} not found");
+                return null;
+            }
+
+            switch (resource)
+            {
+                case StructureDefinition sDef:
+                    ElementDefinition elementSnap = sDef.FindSnapElementShortName(item);
+                    if (elementSnap == null)
+                    {
+                        this.ConversionError(fcn, $"Snapshot node {sDef.Name}.{item} not found");
+                        return null;
+                    }
+                    return $"{parts[0]}-{parts[1]}-definitions.html#{elementSnap.ElementId}";
+
+                default:
+                    this.ConversionError(fcn, $"Resource type '{resource.GetType().Name}' not implemented ");
+                    return null;
+            }
         }
 
         public void Process()
