@@ -22,6 +22,8 @@ namespace FGraph
         public String BindingNode_CssClass = "valueSet";
         public String FixNode_CssClass = "value";
         public String PatternNode_CssClass = "value";
+        String currentPath;
+        KeyValuePair<String, JToken> currentItem;
 
         public bool ShowClass { get; set; } = true;
         public string GraphName { get; set; } = null;
@@ -52,6 +54,15 @@ namespace FGraph
         {
             //Debugger.Break();
             base.ConversionError("FGrapher", method, msg);
+        }
+
+        public void ParseItemError(string method, string msg)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(msg);
+            sb.AppendLine($"File {Path.GetFileName(this.currentPath)}");
+            sb.AppendLine($"{this.currentItem.Key}: {this.currentItem.Value}");
+            this.ConversionError(method, sb.ToString());
         }
 
         public void ConversionWarn(string method, string msg)
@@ -171,6 +182,7 @@ namespace FGraph
 
         void LoadFile(String path)
         {
+            this.currentPath = path;
             using (StreamReader r = new StreamReader(path))
             {
                 StringBuilder json = new StringBuilder();
@@ -195,7 +207,10 @@ namespace FGraph
         {
             JObject j = item as JObject;
             foreach (KeyValuePair<String, JToken> kvp in j)
+            {
+                this.currentItem = kvp;
                 LoadItem(kvp.Key, kvp.Value);
+            }
         }
 
         void SetAnchor(GraphNode node)
@@ -224,7 +239,7 @@ namespace FGraph
 
                 if (node.SDef == null)
                 {
-                    this.ConversionError(fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
+                    this.ParseItemError(fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
                     return;
                 }
 
@@ -244,7 +259,7 @@ namespace FGraph
                 ElementDefinition elementSnap = node.SDef.FindSnapElement(linkElementId);
                 if (elementSnap == null)
                 {
-                    this.ConversionError(fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
+                    this.ParseItemError(fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
                     return;
                 }
 
@@ -290,7 +305,7 @@ namespace FGraph
                     break;
 
                 default:
-                    this.ConversionError("Load", $"unknown graph item '{type}'");
+                    this.ParseItemError("Load", $"unknown graph item '{type}'");
                     return;
             }
         }
@@ -333,7 +348,7 @@ namespace FGraph
 
             if (this.TryGetResource<DomainResource>(url, out DomainResource resource) == false)
             {
-                this.ConversionError(fcn, "Resource {url} not found");
+                this.ParseItemError(fcn, "Resource {url} not found");
                 return null;
             }
 
@@ -343,13 +358,13 @@ namespace FGraph
                     ElementDefinition elementSnap = sDef.FindSnapElementShortName(item);
                     if (elementSnap == null)
                     {
-                        this.ConversionError(fcn, $"Snapshot node {sDef.Name}.{item} not found");
+                        this.ParseItemError(fcn, $"Snapshot node {sDef.Name}.{item} not found");
                         return null;
                     }
                     return $"{parts[0]}-{parts[1]}-definitions.html#{elementSnap.ElementId}";
 
                 default:
-                    this.ConversionError(fcn, $"Resource type '{resource.GetType().Name}' not implemented ");
+                    this.ParseItemError(fcn, $"Resource type '{resource.GetType().Name}' not implemented ");
                     return null;
             }
         }
@@ -472,7 +487,7 @@ namespace FGraph
 
             if (sourceNode.Anchor == null)
             {
-                this.ConversionError(fcn, $"Node {sourceNode.NodeName} anchor is null");
+                this.ParseItemError(fcn, $"Node {sourceNode.NodeName} anchor is null");
                 return false;
             }
 
@@ -490,7 +505,7 @@ namespace FGraph
 
             if (sourceNode.SDef == null)
             {
-                this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
+                this.ParseItemError(fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
                 return false;
             }
 
@@ -501,7 +516,7 @@ namespace FGraph
             elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
             if (elementSnap == null)
             {
-                this.ConversionError(fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
+                this.ParseItemError(fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
                 return false;
             }
 
@@ -582,7 +597,7 @@ namespace FGraph
                 return targetNode;
             }
 
-            this.ConversionError("GetTargetNode", $"Can not find target '{targetAnchor.Url}'.");
+            this.ParseItemError("GetTargetNode", $"Can not find target '{targetAnchor.Url}'.");
             return null;
         }
 
@@ -595,7 +610,7 @@ namespace FGraph
             List<GraphNode> targets = FindNamedNodes(link.Target);
             if ((sources.Count > 1) && (targets.Count > 1))
             {
-                this.ConversionError(fcn, $"Many to many link not supported. {link.Source}' <--> {link.Target}");
+                this.ParseItemError(fcn, $"Many to many link not supported. {link.Source}' <--> {link.Target}");
             }
 
             if (this.DebugFlag)
