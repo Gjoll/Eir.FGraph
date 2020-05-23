@@ -11,7 +11,7 @@ namespace FGraph
         public String TraversalName { get; set; }
         public Int32 Depth { get; set; }
 
-        public GraphLink(FGrapher fGraph, JToken data) : base(fGraph)
+        public GraphLink(FGrapher fGraph, JToken data) : base(fGraph, data.OptionalValue("traceMsg"))
         {
             this.TraversalName = data.RequiredValue("traversalName");
             this.Depth = data.OptionalIntValue("depth", 1);

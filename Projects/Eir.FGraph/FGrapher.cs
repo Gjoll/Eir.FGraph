@@ -275,7 +275,7 @@ namespace FGraph
             {
                 case "graphNode":
                     {
-                        GraphNode node = new GraphNode(this, value);
+                        GraphNode node = new GraphNode(this, value.OptionalValue("traceMsg"));
                         this.SetAnchor(node);
                         this.graphNodesByName.Add(node.NodeName, node);
                         if (node.Anchor != null)
@@ -430,7 +430,7 @@ namespace FGraph
         {
             String System(String system) => system.LastUriPart();
 
-            GraphNode targetNode = new GraphNode(this, cssClass);
+            GraphNode targetNode = new GraphNode(this, "CreateFhirPrimitiveNode", cssClass);
             targetNode.LhsAnnotationText = $"{type} ";
 
             switch (fhirElement)

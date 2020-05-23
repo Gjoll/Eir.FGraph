@@ -9,10 +9,13 @@ namespace FGraph
     public class GraphItem
     {
         protected FGrapher fGraph;
+        protected String traceMsg;
 
-        public GraphItem(FGrapher fGraph)
+        public GraphItem(FGrapher fGraph, 
+            String traceMsg)
         {
             this.fGraph = fGraph;
+            this.traceMsg = traceMsg;
         }
 
     }
