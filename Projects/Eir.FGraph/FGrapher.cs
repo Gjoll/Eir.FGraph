@@ -275,7 +275,7 @@ namespace FGraph
             {
                 case "graphNode":
                     {
-                        GraphNode node = new GraphNode(this, value.OptionalValue("traceMsg"));
+                        GraphNode node = new GraphNode(this, value);
                         this.SetAnchor(node);
                         this.graphNodesByName.Add(node.NodeName, node);
                         if (node.Anchor != null)
