@@ -584,7 +584,7 @@ namespace FGraph
 
             if (targetAnchor.Url.StartsWith("http://hl7.org/fhir"))
             {
-                targetNode = new GraphNode(this, FhirResourceNode_CssClass)
+                targetNode = new GraphNode(this, "GetTargetNode", FhirResourceNode_CssClass)
                 {
                     NodeName = $"fhir/{targetAnchor.Url.LastUriPart()}",
                     DisplayName = $"{targetAnchor.Url.LastUriPart()}",
@@ -642,7 +642,7 @@ namespace FGraph
 
                 if (elementDiff.Binding != null)
                 {
-                    GraphNode targetNode = new GraphNode(this, BindingNode_CssClass);
+                    GraphNode targetNode = new GraphNode(this, "ProcessLink", BindingNode_CssClass);
                     targetNode.HRef = this.HRef(elementDiff.Binding.ValueSet);
                     targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
                     if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
