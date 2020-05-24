@@ -65,6 +65,15 @@ namespace FGraph
             this.ConversionError(method, sb.ToString());
         }
 
+        public void ParseItemWarn(string method, string msg)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(msg);
+            sb.AppendLine($"File {Path.GetFileName(this.currentPath)}");
+            sb.AppendLine($"{this.currentItem.Key}: {this.currentItem.Value}");
+            this.ConversionWarn(method, sb.ToString());
+        }
+
         public void ConversionWarn(string method, string msg)
         {
             //Debugger.Break();
@@ -332,7 +341,7 @@ namespace FGraph
 
             if (url.StartsWith(this.BaseUrl) == false)
             {
-                this.ConversionWarn(fcn, $"Url '{url}' base is not fhir and is not {this.BaseUrl}");
+                this.ParseItemWarn(fcn, $"Url '{url}' base is not fhir and is not {this.BaseUrl}");
                 return "";
             }
 
@@ -396,7 +405,7 @@ namespace FGraph
             }
             if (retVal.Count == 0)
             {
-                this.ConversionWarn("FindNamedNodes",
+                this.ParseItemWarn("FindNamedNodes",
                     $"No nodes named '{name}' found");
             }
 
