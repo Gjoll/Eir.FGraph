@@ -160,7 +160,10 @@ namespace FGraph
             {
                 case StructureDefinition sDef:
                     if (sDef.Snapshot == null)
+                    {
                         SnapshotCreator.Create(sDef);
+                        sDef.SaveJson(path);
+                    }
                     resourceUrl = sDef.Url;
                     break;
 
@@ -659,7 +662,7 @@ namespace FGraph
                         targetNode.DisplayName = vs.Name;
                     }
                     targetNode.DisplayName += "/ValueSet";
-                    targetNode.LhsAnnotationText = "bind";
+                    targetNode.LhsAnnotationText = "bind1";
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
                     if (this.DebugFlag)
