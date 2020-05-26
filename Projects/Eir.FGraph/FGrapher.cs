@@ -523,7 +523,10 @@ namespace FGraph
 
             elementDiff = sourceNode.SDef.FindDiffElement(linkElementId);
             if (elementDiff == null)
+            {
+                this.ParseItemError(fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
                 return false;
+            }
 
             elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
             if (elementSnap == null)
@@ -662,7 +665,7 @@ namespace FGraph
                         targetNode.DisplayName = vs.Name;
                     }
                     targetNode.DisplayName += "/ValueSet";
-                    targetNode.LhsAnnotationText = "bind1";
+                    targetNode.LhsAnnotationText = "bind";
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
                     if (this.DebugFlag)
