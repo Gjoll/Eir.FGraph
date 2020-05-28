@@ -357,7 +357,7 @@ namespace FGraph
 
             if (this.TryGetResource<DomainResource>(url, out DomainResource resource) == false)
             {
-                this.ParseItemError(fcn, "Resource {url} not found");
+                this.ParseItemError(fcn, $"Resource {url} not found");
                 return null;
             }
 

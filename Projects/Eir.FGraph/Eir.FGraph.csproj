@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>FGraph</ToolCommandName>
-    <Version>2.5.0</Version>
+    <Version>2.6.0</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Gjoll/Eir.FGraph</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
