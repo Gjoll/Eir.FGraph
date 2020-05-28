@@ -160,7 +160,10 @@ namespace FGraph
             {
                 case StructureDefinition sDef:
                     if (sDef.Snapshot == null)
+                    {
                         SnapshotCreator.Create(sDef);
+                        sDef.SaveJson(path);
+                    }
                     resourceUrl = sDef.Url;
                     break;
 
@@ -520,7 +523,10 @@ namespace FGraph
 
             elementDiff = sourceNode.SDef.FindDiffElement(linkElementId);
             if (elementDiff == null)
+            {
+                this.ParseItemError(fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
                 return false;
+            }
 
             elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
             if (elementSnap == null)
