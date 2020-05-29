@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace FGraph
@@ -18,5 +19,6 @@ namespace FGraph
             this.traceMsg = traceMsg;
         }
 
+        public virtual String TraceMsg() => this.traceMsg;
     }
 }

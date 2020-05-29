@@ -23,7 +23,7 @@ namespace FGraph
         public String FixNode_CssClass = "value";
         public String PatternNode_CssClass = "value";
         String currentPath;
-        KeyValuePair<String, JToken> currentItem;
+        String currentItem;
 
         public bool ShowClass { get; set; } = true;
         public string GraphName { get; set; } = null;
@@ -61,7 +61,7 @@ namespace FGraph
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
             sb.AppendLine($"File {Path.GetFileName(this.currentPath)}");
-            sb.AppendLine($"{this.currentItem.Key}: {this.currentItem.Value}");
+            sb.AppendLine(this.currentItem);
             this.ConversionError(method, sb.ToString());
         }
 
@@ -70,7 +70,7 @@ namespace FGraph
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
             sb.AppendLine($"File {Path.GetFileName(this.currentPath)}");
-            sb.AppendLine($"{this.currentItem.Key}: {this.currentItem.Value}");
+            sb.AppendLine(this.currentItem);
             this.ConversionWarn(method, sb.ToString());
         }
 
@@ -220,7 +220,7 @@ namespace FGraph
             JObject j = item as JObject;
             foreach (KeyValuePair<String, JToken> kvp in j)
             {
-                this.currentItem = kvp;
+                this.currentItem = $"{kvp.Key}: {kvp.Value}";
                 LoadItem(kvp.Key, kvp.Value);
             }
         }
@@ -417,6 +417,7 @@ namespace FGraph
 
         void ProcessLink(GraphLink link)
         {
+            this.currentItem = link.TraceMsg();
             switch (link)
             {
                 case GraphLinkByBinding linkByBinding:
