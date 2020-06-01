@@ -83,6 +83,8 @@ namespace FGraph
 
         bool Process()
         {
+            const String fcn = "Process";
+
             if (String.IsNullOrEmpty(options.outputDir))
                 throw new Exception("Missing 'outputDir' option setting");
             this.fGrapher.OutputDir = options.outputDir;
@@ -106,6 +108,7 @@ namespace FGraph
             if (this.fGrapher.BaseUrl.EndsWith("/") == false)
                 this.fGrapher.BaseUrl += "/";
 
+            this.fGrapher.ConversionInfo(fcn, $"Loading");
             foreach (String resourcePath in options.resourcePaths)
                 this.fGrapher.LoadResources(resourcePath);
 
@@ -117,6 +120,7 @@ namespace FGraph
             else
                 this.inputDir = Path.GetDirectoryName(options.inputPath);
 
+            this.fGrapher.ConversionInfo(fcn, $"Processing");
             this.fGrapher.Process();
             foreach (Options.Rendering rendering in this.options.traversals)
             {
@@ -145,7 +149,10 @@ namespace FGraph
                         throw new NotImplementedException($"Rendering '{rendering.name}' is not known");
                 }
             }
+
+            this.fGrapher.ConversionInfo(fcn, $"Saving");
             this.fGrapher.SaveAll();
+            this.fGrapher.ConversionInfo(fcn, $"Done");
             return this.fGrapher.HasErrors == false;
         }
 

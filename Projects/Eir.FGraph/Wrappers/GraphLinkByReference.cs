@@ -7,7 +7,7 @@ namespace FGraph
 {
     class GraphLinkByReference : GraphLinkByItem
     {
-        public GraphLinkByReference(FGrapher fGraph, JToken data) : base(fGraph, data)
+        public GraphLinkByReference(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data)
         {
         }
     }

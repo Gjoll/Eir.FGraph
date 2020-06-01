@@ -15,7 +15,7 @@ namespace FGraph
 
         /// <summary>
         /// Optional path to sub item.
-        /// if empty, referes to whole item with url.
+        /// if empty, refers to whole item with url.
         /// i.e. if url is of a profile, this may be the element id of the
         /// element this anchor refers to.
         /// </summary>

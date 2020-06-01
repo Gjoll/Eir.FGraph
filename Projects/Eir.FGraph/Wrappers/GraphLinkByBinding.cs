@@ -7,7 +7,7 @@ namespace FGraph
 {
     class GraphLinkByBinding: GraphLinkByItem
     {
-        public GraphLinkByBinding(FGrapher fGraph, JToken data) : base(fGraph, data)
+        public GraphLinkByBinding(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data)
         {
             this.Source = data.RequiredValue("source");
         }

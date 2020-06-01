@@ -56,20 +56,20 @@ namespace FGraph
             base.ConversionError("FGrapher", method, msg);
         }
 
-        public void ParseItemError(string method, string msg)
+        public void ParseItemError(String sourceFile, string method, string msg)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
-            sb.AppendLine($"File {Path.GetFileName(this.currentPath)}");
+            sb.AppendLine($"File {sourceFile}");
             sb.AppendLine(this.currentItem);
             this.ConversionError(method, sb.ToString());
         }
 
-        public void ParseItemWarn(string method, string msg)
+        public void ParseItemWarn(String sourceFile, string method, string msg)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
-            sb.AppendLine($"File {Path.GetFileName(this.currentPath)}");
+            sb.AppendLine($"File {sourceFile}");
             sb.AppendLine(this.currentItem);
             this.ConversionWarn(method, sb.ToString());
         }
@@ -109,14 +109,15 @@ namespace FGraph
 
         public void LoadResources(String path)
         {
-            path = Path.GetFullPath(path);
+            const String fcn = "LoadResources";
+
             if (Directory.Exists(path) == true)
                 LoadResourceDir(path);
             else if (File.Exists(path))
                 LoadResourceFile(path);
             else
             {
-                this.ConversionError("LoadResources", $"{path} not found");
+                this.ConversionError(fcn, $"{path} not found");
             }
         }
 
@@ -205,23 +206,23 @@ namespace FGraph
                 {
                     JArray array = JsonConvert.DeserializeObject<JArray>(json.ToString());
                     foreach (var item in array)
-                        LoadItem(item);
+                        LoadItem(path, item);
                 }
                 catch (Exception e)
                 {
-                    this.ConversionError("LoadFile", $"Error loading json file '{Path.GetFileName(path)}'\n" +
+                    this.ConversionError("LoadFile", $"Error loading json file '{path}'\n" +
                                                      $"    {e.Message}");
                 }
             }
         }
 
-        public void LoadItem(JToken item)
+        public void LoadItem(String sourceFile, JToken item)
         {
             JObject j = item as JObject;
             foreach (KeyValuePair<String, JToken> kvp in j)
             {
                 this.currentItem = $"{kvp.Key}: {kvp.Value}";
-                LoadItem(kvp.Key, kvp.Value);
+                LoadItem(sourceFile, kvp.Key, kvp.Value);
             }
         }
 
@@ -232,7 +233,7 @@ namespace FGraph
             if (node.Anchor == null)
                 return;
 
-            String hRef = this.HRef(node.Anchor.Url, node.Anchor.Item);
+            String hRef = this.HRef(node.SourceFile, node.Anchor.Url, node.Anchor.Item);
             node.HRef = hRef;
 
             if (this.TryGetProfile(node.Anchor.Url, out StructureDefinition sDef) == true)
@@ -251,7 +252,7 @@ namespace FGraph
 
                 if (node.SDef == null)
                 {
-                    this.ParseItemError(fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
+                    this.ParseItemError(node.SourceFile, fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
                     return;
                 }
 
@@ -271,7 +272,7 @@ namespace FGraph
                 ElementDefinition elementSnap = node.SDef.FindSnapElement(linkElementId);
                 if (elementSnap == null)
                 {
-                    this.ParseItemError(fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
+                    this.ParseItemError(node.SourceFile, fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
                     return;
                 }
 
@@ -281,13 +282,13 @@ namespace FGraph
             }
         }
 
-        public void LoadItem(String type, JToken value)
+        public void LoadItem(String sourceFile, String type, JToken value)
         {
             switch (type)
             {
                 case "graphNode":
                     {
-                        GraphNode node = new GraphNode(this, value);
+                        GraphNode node = new GraphNode(this, sourceFile, value);
                         this.SetAnchor(node);
                         this.graphNodesByName.Add(node.NodeName, node);
                         if (node.Anchor != null)
@@ -297,34 +298,33 @@ namespace FGraph
 
                 case "graphLinkByReference":
                     {
-                        GraphLinkByReference link = new GraphLinkByReference(this, value);
+                        GraphLinkByReference link = new GraphLinkByReference(this, sourceFile, value);
                         this.graphLinks.Add(link);
                     }
                     break;
 
                 case "graphLinkByBinding":
                     {
-                        GraphLinkByBinding link = new GraphLinkByBinding(this, value);
+                        GraphLinkByBinding link = new GraphLinkByBinding(this, sourceFile, value);
                         this.graphLinks.Add(link);
                     }
                     break;
 
                 case "graphLinkByName":
                     {
-                        GraphLinkByName link = new GraphLinkByName(this, value);
+                        GraphLinkByName link = new GraphLinkByName(this, sourceFile, value);
                         this.graphLinks.Add(link);
                     }
                     break;
 
                 default:
-                    this.ParseItemError("Load", $"unknown graph item '{type}'");
+                    this.ParseItemError(sourceFile, "Load", $"unknown graph item '{type}'");
                     return;
             }
         }
 
         public void Load(String path)
         {
-            path = Path.GetFullPath(path);
             if (Directory.Exists(path) == true)
                 LoadDir(path);
             else if (File.Exists(path))
@@ -335,7 +335,7 @@ namespace FGraph
             }
         }
 
-        protected String HRef(String url, String item = null)
+        protected String HRef(String sourceFile, String url, String item = null)
         {
             const String fcn = "HRef";
 
@@ -344,7 +344,7 @@ namespace FGraph
 
             if (url.StartsWith(this.BaseUrl) == false)
             {
-                this.ParseItemWarn(fcn, $"Url '{url}' base is not fhir and is not {this.BaseUrl}");
+                this.ParseItemWarn(sourceFile, fcn, $"Url '{url}' base is not fhir and is not {this.BaseUrl}");
                 return "";
             }
 
@@ -360,7 +360,7 @@ namespace FGraph
 
             if (this.TryGetResource<DomainResource>(url, out DomainResource resource) == false)
             {
-                this.ParseItemError(fcn, $"Resource {url} not found");
+                this.ParseItemError(sourceFile, fcn, $"Resource {url} not found");
                 return null;
             }
 
@@ -370,13 +370,13 @@ namespace FGraph
                     ElementDefinition elementSnap = sDef.FindSnapElementShortName(item);
                     if (elementSnap == null)
                     {
-                        this.ParseItemError(fcn, $"Snapshot node {sDef.Name}.{item} not found");
+                        this.ParseItemError(sourceFile, fcn, $"Snapshot node {sDef.Name}.{item} not found");
                         return null;
                     }
                     return $"{parts[0]}-{parts[1]}-definitions.html#{elementSnap.ElementId}";
 
                 default:
-                    this.ParseItemError(fcn, $"Resource type '{resource.GetType().Name}' not implemented ");
+                    this.ParseItemError(sourceFile, fcn, $"Resource type '{resource.GetType().Name}' not implemented ");
                     return null;
             }
         }
@@ -397,7 +397,7 @@ namespace FGraph
                 ProcessLink(link);
         }
 
-        List<GraphNode> FindNamedNodes(String name)
+        List<GraphNode> FindNamedNodes(String sourceFile, String name)
         {
             List<GraphNode> retVal = new List<GraphNode>();
             Regex r = new Regex(name);
@@ -408,7 +408,8 @@ namespace FGraph
             }
             if (retVal.Count == 0)
             {
-                this.ParseItemWarn("FindNamedNodes",
+                this.ParseItemWarn(sourceFile, 
+                    "FindNamedNodes",
                     $"No nodes named '{name}' found");
             }
 
@@ -500,7 +501,7 @@ namespace FGraph
 
             if (sourceNode.Anchor == null)
             {
-                this.ParseItemError(fcn, $"Node {sourceNode.NodeName} anchor is null");
+                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName} anchor is null");
                 return false;
             }
 
@@ -518,21 +519,21 @@ namespace FGraph
 
             if (sourceNode.SDef == null)
             {
-                this.ParseItemError(fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
+                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
                 return false;
             }
 
             elementDiff = sourceNode.SDef.FindDiffElement(linkElementId);
             if (elementDiff == null)
             {
-                this.ParseItemError(fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
+                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
                 return false;
             }
 
             elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
             if (elementSnap == null)
             {
-                this.ParseItemError(fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
+                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
                 return false;
             }
 
@@ -588,7 +589,7 @@ namespace FGraph
 
             if (this.DebugFlag)
                 this.ConversionInfo("LinkByReference", $"{link.Source} -> {link.Item}");
-            List<GraphNode> sources = FindNamedNodes(link.Source);
+            List<GraphNode> sources = FindNamedNodes(link.SourceFile, link.Source);
             foreach (GraphNode sourceNode in sources)
                 ProcessNode(sourceNode, link.Item);
         }
@@ -613,7 +614,7 @@ namespace FGraph
                 return targetNode;
             }
 
-            this.ParseItemError("GetTargetNode", $"Can not find target '{targetAnchor.Url}'.");
+            this.ParseItemError("", "GetTargetNode", $"Can not find target '{targetAnchor.Url}'.");
             return null;
         }
 
@@ -622,11 +623,11 @@ namespace FGraph
         {
             const String fcn = "ProcessLink";
 
-            List<GraphNode> sources = FindNamedNodes(link.Source);
-            List<GraphNode> targets = FindNamedNodes(link.Target);
+            List<GraphNode> sources = FindNamedNodes(link.SourceFile, link.Source);
+            List<GraphNode> targets = FindNamedNodes(link.SourceFile, link.Target);
             if ((sources.Count > 1) && (targets.Count > 1))
             {
-                this.ParseItemError(fcn, $"Many to many link not supported. {link.Source}' <--> {link.Target}");
+                this.ParseItemError(link.Source, fcn, $"Many to many link not supported. {link.Source}' <--> {link.Target}");
             }
 
             if (this.DebugFlag)
@@ -659,7 +660,7 @@ namespace FGraph
                 if (elementDiff.Binding != null)
                 {
                     GraphNode targetNode = new GraphNode(this, "ProcessLink", BindingNode_CssClass);
-                    targetNode.HRef = this.HRef(elementDiff.Binding.ValueSet);
+                    targetNode.HRef = this.HRef(link.SourceFile, elementDiff.Binding.ValueSet);
                     targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
                     if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
                     {
@@ -692,7 +693,7 @@ namespace FGraph
                 }
             }
 
-            List<GraphNode> sources = FindNamedNodes(link.Source);
+            List<GraphNode> sources = FindNamedNodes(link.SourceFile, link.Source);
 
             if (this.DebugFlag)
                 this.ConversionInfo("LinkByBinding", $"{link.Source}");

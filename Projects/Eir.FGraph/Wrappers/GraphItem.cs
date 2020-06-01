@@ -11,11 +11,14 @@ namespace FGraph
     {
         protected FGrapher fGraph;
         protected String traceMsg;
+        public String SourceFile;
 
-        public GraphItem(FGrapher fGraph, 
+        public GraphItem(FGrapher fGraph,
+            String sourceFile,
             String traceMsg)
         {
             this.fGraph = fGraph;
+            this.SourceFile = sourceFile;
             this.traceMsg = traceMsg;
         }
 

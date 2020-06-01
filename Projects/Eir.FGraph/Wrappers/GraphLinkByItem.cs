@@ -23,7 +23,7 @@ namespace FGraph
         /// </summary>
         public String Item { get; set; }
 
-        public GraphLinkByItem(FGrapher fGraph, JToken data) : base(fGraph, data)
+        public GraphLinkByItem(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data)
         {
             this.Source = data.RequiredValue("source");
             this.Item = data.OptionalValue("item");

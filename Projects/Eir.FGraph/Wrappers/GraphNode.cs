@@ -84,13 +84,14 @@ namespace FGraph
         /// </summary>
         public ElementDefinition ElementDiff { get; set; } = null;
 
-        public GraphNode(FGrapher fGraph, String traceMsg, String cssClass) : base(fGraph, traceMsg)
+        public GraphNode(FGrapher fGraph, String sourceFile, String traceMsg, String cssClass) : 
+            base(fGraph, sourceFile, traceMsg)
         {
             this.CssClass = cssClass;
         }
 
 
-        public GraphNode(FGrapher fGraph, JToken data) : base(fGraph, data.OptionalValue("traceMsg"))
+        public GraphNode(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data.OptionalValue("traceMsg"))
         {
             this.NodeName = data.RequiredValue("nodeName");
             this.DisplayName = data.RequiredValue("displayName");
