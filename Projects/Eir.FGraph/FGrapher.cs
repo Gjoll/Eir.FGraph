@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Hl7.Fhir.Serialization;
 using FhirKhit.Tools.R4;
+using System.Linq;
 
 namespace FGraph
 {
@@ -58,9 +59,13 @@ namespace FGraph
 
         public void ParseItemError(String sourceFile, string method, string msg)
         {
+            String[] sourceFileLines = sourceFile.Split("/n"); 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
-            sb.AppendLine($"File '{sourceFile}'. ");
+            sb.AppendLine($"File '{sourceFileLines[0]}'");
+            for (Int32 i = 1; i < sourceFileLines.Length - 1; i++)
+                sb.AppendLine($"     '{sourceFileLines[i]}'");
+
             if (String.IsNullOrEmpty(this.currentItem) == false)
                 sb.AppendLine(this.currentItem);
             this.ConversionError(method, sb.ToString());
