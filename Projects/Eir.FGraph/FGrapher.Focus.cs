@@ -107,26 +107,26 @@ namespace FGraph
             GraphAnchor anchor = node.Anchor;
             if (anchor == null)
             {
-                this.ConversionError("FGrapher", fcn, $"Anchor is null");
+                this.ParseItemError(node.TraceMsg(), fcn, $"Anchor is null");
                 return null;
             }
 
             if (this.TryGetProfile(anchor.Url, out StructureDefinition sDef) == false)
             {
-                this.ConversionError("FGrapher", fcn, $"StructureDefinition {anchor.Url} not found");
+                this.ParseItemError(node.TraceMsg(), fcn, $"StructureDefinition {anchor.Url} not found");
                 return null;
             }
 
             ElementDefinition e = sDef.FindSnapElement(elementId);
             if (e == null)
             {
-                this.ConversionError("FGrapher", fcn, $"Element {elementId} not found");
+                this.ParseItemError(node.TraceMsg(), fcn, $"Element {elementId} not found");
                 return null;
             }
 
             if (e.Min.HasValue == false)
             {
-                this.ConversionError("FGrapher",
+                this.ParseItemError(node.TraceMsg(),
                     fcn,
                     $"element {elementId}' min cardinality is empty");
                 return null;
@@ -134,7 +134,7 @@ namespace FGraph
 
             if (String.IsNullOrWhiteSpace(e.Max) == true)
             {
-                this.ConversionError("FGrapher",
+                this.ParseItemError(node.TraceMsg(),
                     fcn,
                     $"element {elementId}' max cardinality is empty");
                 return null;
@@ -187,7 +187,7 @@ namespace FGraph
                     {
                         if (parentNode.ParentLinks.Count != 1)
                         {
-                            this.ConversionError("FGrapher", fcn, $"Anchor is null");
+                            this.ParseItemError(parentLink.Node.TraceMsg(), fcn, $"Anchor is null");
                             break;
                         }
                         else
@@ -207,7 +207,6 @@ namespace FGraph
                     //    depth - parentLink.Depth));
                     //yield return parentContainer;
                 }
-
             }
         }
 

@@ -22,13 +22,13 @@ namespace FGraph
         public String BindingNode_CssClass = "valueSet";
         public String FixNode_CssClass = "value";
         public String PatternNode_CssClass = "value";
-        String currentPath;
-        String currentItem;
 
         public bool ShowClass { get; set; } = true;
         public string GraphName { get; set; } = null;
 
         public string BaseUrl { get; set; }
+
+        String currentItem;
 
         public string OutputDir
         {
@@ -60,8 +60,9 @@ namespace FGraph
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
-            sb.AppendLine($"File {sourceFile}");
-            sb.AppendLine(this.currentItem);
+            sb.AppendLine($"File '{sourceFile}'. ");
+            if (String.IsNullOrEmpty(this.currentItem) == false)
+                sb.AppendLine(this.currentItem);
             this.ConversionError(method, sb.ToString());
         }
 
@@ -70,7 +71,8 @@ namespace FGraph
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
             sb.AppendLine($"File {sourceFile}");
-            sb.AppendLine(this.currentItem);
+            if (String.IsNullOrEmpty(this.currentItem) == false)
+                sb.AppendLine(this.currentItem);
             this.ConversionWarn(method, sb.ToString());
         }
 
@@ -117,7 +119,7 @@ namespace FGraph
                 LoadResourceFile(path);
             else
             {
-                this.ConversionError(fcn, $"{path} not found");
+                this.ParseItemError(path, fcn, $"{path} not found");
             }
         }
 
@@ -195,7 +197,6 @@ namespace FGraph
 
         void LoadFile(String path)
         {
-            this.currentPath = path;
             using (StreamReader r = new StreamReader(path))
             {
                 StringBuilder json = new StringBuilder();
@@ -210,7 +211,7 @@ namespace FGraph
                 }
                 catch (Exception e)
                 {
-                    this.ConversionError("LoadFile", $"Error loading json file '{path}'\n" +
+                    this.ParseItemError(path, "LoadFile", $"Error loading json file '{path}'\n" +
                                                      $"    {e.Message}");
                 }
             }
@@ -233,7 +234,7 @@ namespace FGraph
             if (node.Anchor == null)
                 return;
 
-            String hRef = this.HRef(node.SourceFile, node.Anchor.Url, node.Anchor.Item);
+            String hRef = this.HRef(node.TraceMsg(), node.Anchor.Url, node.Anchor.Item);
             node.HRef = hRef;
 
             if (this.TryGetProfile(node.Anchor.Url, out StructureDefinition sDef) == true)
@@ -252,7 +253,7 @@ namespace FGraph
 
                 if (node.SDef == null)
                 {
-                    this.ParseItemError(node.SourceFile, fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
+                    this.ParseItemError(node.TraceMsg(), fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
                     return;
                 }
 
@@ -272,7 +273,7 @@ namespace FGraph
                 ElementDefinition elementSnap = node.SDef.FindSnapElement(linkElementId);
                 if (elementSnap == null)
                 {
-                    this.ParseItemError(node.SourceFile, fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
+                    this.ParseItemError(node.TraceMsg(), fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
                     return;
                 }
 
@@ -331,7 +332,7 @@ namespace FGraph
                 LoadFile(path);
             else
             {
-                this.ConversionError("Load", $"{path} not found");
+                this.ParseItemError(path, "Load", $"{path} not found");
             }
         }
 
@@ -408,7 +409,7 @@ namespace FGraph
             }
             if (retVal.Count == 0)
             {
-                this.ParseItemWarn(sourceFile, 
+                this.ParseItemWarn(sourceFile,
                     "FindNamedNodes",
                     $"No nodes named '{name}' found");
             }
@@ -444,7 +445,7 @@ namespace FGraph
         {
             String System(String system) => system.LastUriPart();
 
-            GraphNode targetNode = new GraphNode(this, "CreateFhirPrimitiveNode", cssClass);
+            GraphNode targetNode = new GraphNode(this, "CreateFhirPrimitiveNode", "FGrapher.CreateFhirPrimitiveNode", cssClass);
             targetNode.LhsAnnotationText = $"{type} ";
 
             switch (fhirElement)
@@ -501,7 +502,7 @@ namespace FGraph
 
             if (sourceNode.Anchor == null)
             {
-                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName} anchor is null");
+                this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName} anchor is null");
                 return false;
             }
 
@@ -519,21 +520,21 @@ namespace FGraph
 
             if (sourceNode.SDef == null)
             {
-                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
+                this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
                 return false;
             }
 
             elementDiff = sourceNode.SDef.FindDiffElement(linkElementId);
             if (elementDiff == null)
             {
-                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
+                this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
                 return false;
             }
 
             elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
             if (elementSnap == null)
             {
-                this.ParseItemError(sourceNode.SourceFile, fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
+                this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
                 return false;
             }
 
@@ -542,13 +543,13 @@ namespace FGraph
 
         void ProcessLink(GraphLinkByReference link)
         {
-            //const String fcn = "ProcessLink";
+            const String fcn = "ProcessLink";
 
             void ProcessNode(GraphNode sourceNode,
                 String linkElementId)
             {
                 if (this.DebugFlag)
-                    this.ConversionInfo("", $"{sourceNode} -> {linkElementId}");
+                    this.ConversionInfo(fcn, $"{sourceNode} -> {linkElementId}");
                 ElementDefinition elementDiff;
                 ElementDefinition elementSnap;
                 if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
@@ -568,7 +569,7 @@ namespace FGraph
                                 sourceNode.AddChild(link, link.Depth, targetNode);
                                 targetNode.AddParent(link, link.Depth, sourceNode);
                                 if (this.DebugFlag)
-                                    this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (targetProfile) {targetNode.NodeName}");
+                                    this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (targetProfile) {targetNode.NodeName}");
                             }
                             break;
                         default:
@@ -580,7 +581,7 @@ namespace FGraph
                                 sourceNode.AddChild(link, link.Depth, targetNode);
                                 targetNode.AddParent(link, link.Depth, sourceNode);
                                 if (this.DebugFlag)
-                                    this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
+                                    this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
                             }
                             break;
                     }
@@ -589,7 +590,7 @@ namespace FGraph
 
             if (this.DebugFlag)
                 this.ConversionInfo("LinkByReference", $"{link.Source} -> {link.Item}");
-            List<GraphNode> sources = FindNamedNodes(link.SourceFile, link.Source);
+            List<GraphNode> sources = FindNamedNodes(link.TraceMsg(), link.Source);
             foreach (GraphNode sourceNode in sources)
                 ProcessNode(sourceNode, link.Item);
         }
@@ -601,7 +602,7 @@ namespace FGraph
 
             if (targetAnchor.Url.StartsWith("http://hl7.org/fhir"))
             {
-                targetNode = new GraphNode(this, "GetTargetNode", FhirResourceNode_CssClass)
+                targetNode = new GraphNode(this, "GetTargetNode", "FGrapher.getTargetNode", FhirResourceNode_CssClass)
                 {
                     NodeName = $"fhir/{targetAnchor.Url.LastUriPart()}",
                     DisplayName = $"{targetAnchor.Url.LastUriPart()}",
@@ -623,8 +624,8 @@ namespace FGraph
         {
             const String fcn = "ProcessLink";
 
-            List<GraphNode> sources = FindNamedNodes(link.SourceFile, link.Source);
-            List<GraphNode> targets = FindNamedNodes(link.SourceFile, link.Target);
+            List<GraphNode> sources = FindNamedNodes(link.TraceMsg(), link.Source);
+            List<GraphNode> targets = FindNamedNodes(link.TraceMsg(), link.Target);
             if ((sources.Count > 1) && (targets.Count > 1))
             {
                 this.ParseItemError(link.Source, fcn, $"Many to many link not supported. {link.Source}' <--> {link.Target}");
@@ -640,14 +641,14 @@ namespace FGraph
                     sourceNode.AddChild(link, link.Depth, targetNode);
                     targetNode.AddParent(link, link.Depth, sourceNode);
                     if (this.DebugFlag)
-                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> {targetNode.NodeName}");
+                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> {targetNode.NodeName}");
                 }
             }
         }
 
         void ProcessLink(GraphLinkByBinding link)
         {
-            //const String fcn = "ProcessLink";
+            const String fcn = "ProcessLink";
 
             void ProcessNode(GraphNode sourceNode,
                 String linkElementId)
@@ -659,8 +660,8 @@ namespace FGraph
 
                 if (elementDiff.Binding != null)
                 {
-                    GraphNode targetNode = new GraphNode(this, "ProcessLink", BindingNode_CssClass);
-                    targetNode.HRef = this.HRef(link.SourceFile, elementDiff.Binding.ValueSet);
+                    GraphNode targetNode = new GraphNode(this, "ProcessLink", "FGrapher.ProcessNode", BindingNode_CssClass);
+                    targetNode.HRef = this.HRef(link.TraceMsg(), elementDiff.Binding.ValueSet);
                     targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
                     if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
                     {
@@ -671,7 +672,7 @@ namespace FGraph
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
                     if (this.DebugFlag)
-                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (binding) {targetNode.NodeName}");
+                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (binding) {targetNode.NodeName}");
                 }
 
                 if (elementDiff.Pattern != null)
@@ -680,7 +681,7 @@ namespace FGraph
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
                     if (this.DebugFlag)
-                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (pattern) {targetNode.NodeName}");
+                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (pattern) {targetNode.NodeName}");
                 }
 
                 if (elementDiff.Fixed != null)
@@ -689,11 +690,11 @@ namespace FGraph
                     sourceNode.AddChild(link, 0, targetNode);
                     targetNode.AddParent(link, 0, sourceNode);
                     if (this.DebugFlag)
-                        this.ConversionInfo("    ", $"{sourceNode.NodeName} -> (fixed) {targetNode.NodeName}");
+                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (fixed) {targetNode.NodeName}");
                 }
             }
 
-            List<GraphNode> sources = FindNamedNodes(link.SourceFile, link.Source);
+            List<GraphNode> sources = FindNamedNodes(link.TraceMsg(), link.Source);
 
             if (this.DebugFlag)
                 this.ConversionInfo("LinkByBinding", $"{link.Source}");
