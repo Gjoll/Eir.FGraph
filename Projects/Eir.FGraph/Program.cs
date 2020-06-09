@@ -14,6 +14,9 @@ namespace FGraph
             public class Rendering
             {
                 public String name { get; set; }
+                public String param1 { get; set; }
+                public String param2 { get; set; }
+                public Int32? depth { get; set; }
                 public String cssFile { get; set; }
             };
 
@@ -133,6 +136,10 @@ namespace FGraph
                     return true;
                 }
 
+                Int32 depth = 1;
+                if (rendering.depth.HasValue)
+                    depth = rendering.depth.Value;
+
                 String cssFile = rendering.cssFile;
                 if (
                     (!Exists(Path.GetFullPath("."), ref cssFile)) &&
@@ -143,8 +150,17 @@ namespace FGraph
                 switch (rendering.name.ToLower())
                 {
                     case "focus":
-                        this.fGrapher.RenderFocusGraphs(cssFile);
+                        this.fGrapher.RenderFocusGraphs(cssFile, depth);
                         break;
+ 
+                    case "single":
+                        if (String.IsNullOrEmpty(rendering.param1))
+                            throw new Exception($"Rendering.param1 must be start node");
+                        if (String.IsNullOrEmpty(rendering.param2))
+                            throw new Exception($"Rendering.param2 must graph name");
+                        this.fGrapher.RenderSingleNode(cssFile, rendering.param1, depth, "focus", rendering.param2);
+                        break;
+                    
                     default:
                         throw new NotImplementedException($"Rendering '{rendering.name}' is not known");
                 }

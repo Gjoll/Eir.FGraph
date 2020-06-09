@@ -14,7 +14,7 @@ namespace FGraph
 {
     public partial class FGrapher
     {
-        public void RenderFocusGraphs(String cssFile)
+        public void RenderFocusGraphs(String cssFile, Int32 depth)
         {
             foreach (GraphNode node in this.graphNodesByAnchor.Values)
             {
@@ -25,15 +25,33 @@ namespace FGraph
                     )
                     this.RenderFocusGraph(cssFile,
                         node,
-                        $"focus/{node.Anchor.Url.LastUriPart()}");
+                        depth,
+                        $"focus/{node.Anchor.Url.LastUriPart()}",
+                        $"FocusGraph-{node.Anchor.Url.LastUriPart()}");
             }
+        }
+
+        public void RenderSingleNode(String cssFile,
+            String startNode,
+            Int32 depth,
+            String traversalName,
+            String graphName)
+        {
+            if (this.graphNodesByName.TryGetValue(startNode, out GraphNode focusGraphNode) == false)
+            {
+                this.ConversionError("RenderSingleNode", $"Start node '{startNode}' not found");
+                return;
+            }
+            RenderFocusGraph(cssFile, focusGraphNode, depth, traversalName, graphName);
         }
 
         public void RenderFocusGraph(String cssFile,
             GraphNode focusGraphNode,
-            String traversalName)
+            Int32 depth,
+            String traversalName,
+            String graphName)
         {
-            SvgEditor e = new SvgEditor($"FocusGraph-{focusGraphNode.Anchor.Url.LastUriPart()}");
+            SvgEditor e = new SvgEditor(graphName);
             e.AddCssFile(cssFile);
 
             this.svgEditors.Add(e);
@@ -48,7 +66,7 @@ namespace FGraph
             seGroupFocus.AppendNode(focusSENode);
 
             seGroupParents.AppendNodes(TraverseParents(focusGraphNode, focusSENode, "focus/*", 1));
-            seGroupFocus.AppendChildren(TraverseChildren(focusGraphNode, focusSENode, "focus/*", 1));
+            seGroupFocus.AppendChildren(TraverseChildren(focusGraphNode, focusSENode, "focus/*", depth));
 
             e.Render(seGroupParents);
         }
