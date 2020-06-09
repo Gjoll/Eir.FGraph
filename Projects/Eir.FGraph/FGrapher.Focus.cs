@@ -185,14 +185,17 @@ namespace FGraph
                     // we want to link to top level parent, not element node.
                     while (parentNode.Anchor.Item != null)
                     {
-                        if (parentNode.ParentLinks.Count != 1)
+                        switch (parentNode.ParentLinks.Count)
                         {
-                            this.ParseItemError(parentLink.Node.TraceMsg(), fcn, $"Anchor is null");
-                            break;
-                        }
-                        else
-                        {
-                            parentNode = parentNode.ParentLinks[0].Node;
+                            case 0:
+                                this.ParseItemError(parentNode.TraceMsg(), fcn, $"No parent nodes found");
+                                break;
+                            case 1:
+                                parentNode = parentNode.ParentLinks[0].Node;
+                                break;
+                            default:
+                                this.ParseItemError(parentNode.TraceMsg(), fcn, $"Multiple ({parentNode.ParentLinks.Count}) parent nodes detected");
+                                break;
                         }
                     }
                     SENode parent = CreateNode(parentNode);
