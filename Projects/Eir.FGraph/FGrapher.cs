@@ -342,6 +342,12 @@ namespace FGraph
             }
         }
 
+        protected String HRefStructDef(String profile, String elementId)
+        {
+            return $"StructureDefinition-{profile}-definitions.html#{elementId}";
+        }
+
+
         protected String HRef(String sourceFile, String url, String item = null)
         {
             const String fcn = "HRef";
@@ -380,7 +386,7 @@ namespace FGraph
                         this.ParseItemError(sourceFile, fcn, $"Snapshot node {sDef.Name}.{item} not found");
                         return null;
                     }
-                    return $"{parts[0]}-{parts[1]}-definitions.html#{elementSnap.ElementId}";
+                    return HRefStructDef(parts[1], elementSnap.ElementId);
 
                 default:
                     this.ParseItemError(sourceFile, fcn, $"Resource type '{resource.GetType().Name}' not implemented ");
@@ -631,7 +637,7 @@ namespace FGraph
                 }
 
                 GraphNode targetNode = new GraphNode(this, "ProcessNodeExtension", "FGrapher.ProcessNodeExtension", ExtensionNode_CssClass);
-                targetNode.HRef = this.HRef(link.TraceMsg(), elementSnap.ElementId);
+                targetNode.HRef = this.HRefStructDef(sourceNode.Anchor.Url.LastUriPart(), elementSnap.ElementId);
                 targetNode.DisplayName = extensionName;
                 targetNode.LhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
                 sourceNode.AddChild(link, 0, targetNode);
@@ -751,7 +757,7 @@ namespace FGraph
             GraphNode sourceNode,
             String linkElementId)
         {
-            const String fcn = "ProcessNodeBindings";
+            //const String fcn = "ProcessNodeBindings";
 
             ElementDefinition elementDiff;
             ElementDefinition elementSnap;
@@ -806,7 +812,7 @@ namespace FGraph
 
         void ProcessLink(GraphLinkByBinding link)
         {
-            const String fcn = "ProcessLink";
+            //const String fcn = "ProcessLink";
 
 
             List<GraphNode> sources = FindNamedNodes(link.TraceMsg(), link.Source);
