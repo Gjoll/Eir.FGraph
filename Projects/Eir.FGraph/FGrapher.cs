@@ -12,8 +12,8 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Hl7.Fhir.Serialization;
-using FhirKhit.Tools.R4;
 using System.Linq;
+using Eir.FhirKhit.R4;
 
 namespace FGraph
 {
@@ -168,7 +168,8 @@ namespace FGraph
             switch (domainResource)
             {
                 case StructureDefinition sDef:
-                    if (sDef.Snapshot == null)
+                    if ((sDef.Snapshot == null) ||
+                        (sDef.Snapshot.Element.Count == 0))
                     {
                         SnapshotCreator.Create(sDef);
                         sDef.SaveJson(path);
@@ -274,18 +275,7 @@ namespace FGraph
 
                     linkElementId = id;
                 }
-
-                ElementDefinition elementDiff = node.SDef.FindDiffElement(linkElementId);
-                ElementDefinition elementSnap = node.SDef.FindSnapElement(linkElementId);
-                if (elementSnap == null)
-                {
-                    this.ParseItemError(node.TraceMsg(), fcn, $"Node {node.NodeName}. Can not find snapshot element {linkElementId}'.");
-                    return;
-                }
-
                 node.ElementId = linkElementId;
-                node.ElementSnap = elementSnap;
-                node.ElementDiff = elementDiff;
             }
         }
 
@@ -380,13 +370,8 @@ namespace FGraph
             switch (resource)
             {
                 case StructureDefinition sDef:
-                    ElementDefinition elementSnap = sDef.FindSnapElementShortName(item);
-                    if (elementSnap == null)
-                    {
-                        this.ParseItemError(sourceFile, fcn, $"Snapshot node {sDef.Name}.{item} not found");
-                        return null;
-                    }
-                    return HRefStructDef(parts[1], elementSnap.ElementId);
+                    String normalizedName = sDef.NormalizedName(item);
+                    return HRefStructDef(parts[1], normalizedName);
 
                 default:
                     this.ParseItemError(sourceFile, fcn, $"Resource type '{resource.GetType().Name}' not implemented ");

@@ -138,6 +138,7 @@ namespace FGraph
             ElementDefinition e = sDef.FindSnapElement(elementId);
             if (e == null)
             {
+                e = sDef.FindSnapElement(elementId);
                 this.ParseItemError(node.TraceMsg(), fcn, $"Element {elementId} not found");
                 return null;
             }

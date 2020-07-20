@@ -36,16 +36,10 @@ namespace FGraph
             return sd.Snapshot.Element.FindElement(normName);
         }
 
-        /// <summary>
-        /// Find snapnode element.
-        /// id is a typical fhir ElementDefinition.id except that the first part (part containing base name)
-        /// is missing.
-        /// </summary>
-        public static ElementDefinition FindSnapElementShortName(this StructureDefinition sd, String id)
+        public static String NormalizedName(this StructureDefinition sd, String id)
         {
             String baseName = sd.BaseDefinition.LastUriPart();
-            String normName = $"{baseName}.{id}";
-            return sd.Snapshot.Element.FindElement(normName);
+            return $"{baseName}.{id}";
         }
 
         public static ElementDefinition FindDiffElement(this StructureDefinition sd, String id)

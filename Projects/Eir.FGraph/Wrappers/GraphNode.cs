@@ -70,19 +70,9 @@ namespace FGraph
         public StructureDefinition SDef { get; set; } = null;
 
         /// <summary>
-        /// If anchor points to an element definition in a profile, this is the snapshot element.
-        /// </summary>
-        public ElementDefinition ElementSnap { get; set; } = null;
-
-        /// <summary>
         /// Full element id (if sdef)
         /// </summary>
         public String ElementId { get; set; }
-
-        /// <summary>
-        /// If anchor points to an element definition in a profile, this is the differential element.
-        /// </summary>
-        public ElementDefinition ElementDiff { get; set; } = null;
 
         public GraphNode(FGrapher fGraph, String sourceFile, String traceMsg, String cssClass) : 
             base(fGraph, sourceFile, traceMsg)
