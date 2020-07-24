@@ -283,7 +283,7 @@ namespace FGraph
         {
             switch (type)
             {
-                case "graphNode":
+                case "node":
                     {
                         GraphNode node = new GraphNode(this, sourceFile, value);
                         this.SetAnchor(node);
@@ -293,21 +293,47 @@ namespace FGraph
                     }
                     break;
 
-                case "graphLinkByReference":
+                case "graph":
+                    {
+                        String nodeName = value?["nodeName"]?.Value<String>();
+                        String traversalName = value?["traversalName"]?.Value<String>();
+                        if (String.IsNullOrEmpty(nodeName))
+                        {
+                            this.ParseItemError(sourceFile, "Load", $"graph command missing required nodeName");
+                            return;
+                        }
+
+                        if (String.IsNullOrEmpty(traversalName))
+                        {
+                            this.ParseItemError(sourceFile, "Load", $"graph command missing required traversalName");
+                            return;
+                        }
+
+                        if (this.TryGetNodeByName(nodeName, out GraphNode node) == false)
+                        {
+                            this.ParseItemError(sourceFile, "Load", $"unknown node '{nodeName}' in graph command");
+                            return;
+                        }
+                        if (node.Traversals.Contains(traversalName) == false)
+                            node.Traversals.Add(traversalName);
+                    }
+                    break;
+
+                case "linkByReference":
                     {
                         GraphLinkByReference link = new GraphLinkByReference(this, sourceFile, value);
                         this.graphLinks.Add(link);
                     }
                     break;
 
-                case "graphLinkByBinding":
+                case "linkByBinding":
                     {
                         GraphLinkByBinding link = new GraphLinkByBinding(this, sourceFile, value);
                         this.graphLinks.Add(link);
                     }
                     break;
 
-                case "graphLinkByName":
+                case "linkByName":
                     {
                         GraphLinkByName link = new GraphLinkByName(this, sourceFile, value);
                         this.graphLinks.Add(link);

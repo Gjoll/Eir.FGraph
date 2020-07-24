@@ -10,8 +10,6 @@ namespace FGraph
     [DebuggerDisplay("{NodeName}")]
     public class GraphNode : GraphItem
     {
-        public Guid NodeGuid { get; } = Guid.NewGuid();
-
         /// <summary>
         /// Class that defines links to/from this node.
         /// </summary>
@@ -48,6 +46,11 @@ namespace FGraph
         /// css class to set svg element to.
         /// </summary>
         public String CssClass { get; set; }
+
+        /// <summary>
+        /// Names of traversals that this list is a part of.
+        /// </summary>
+        public List<String> Traversals { get; } = new List<string>();
 
         public List<Link> ParentLinks { get; } = new List<Link>();
         public List<Link> ChildLinks { get; } = new List<Link>();

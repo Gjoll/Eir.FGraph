@@ -149,6 +149,10 @@ namespace FGraph
 
                 switch (rendering.name.ToLower())
                 {
+                    case "frag":
+                        this.fGrapher.RenderFocusGraphs(cssFile, depth);
+                        break;
+
                     case "focus":
                         this.fGrapher.RenderFocusGraphs(cssFile, depth);
                         break;
