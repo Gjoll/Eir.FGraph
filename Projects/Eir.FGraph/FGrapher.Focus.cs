@@ -14,20 +14,14 @@ namespace FGraph
 {
     public partial class FGrapher
     {
-        public void RenderFocusGraphs(String cssFile, Int32 depth)
+        public void RenderFocusGraphs(String cssFile, String traversal, Int32 depth)
         {
             foreach (GraphNode node in this.graphNodesByAnchor.Values)
             {
+                String tName = traversal.ToMachineName();
                 // Only render top level (profile) nodes.
-                if (
-                    (node.Anchor != null) &&
-                    (String.IsNullOrEmpty(node.Anchor.Item))
-                    )
-                    this.RenderFocusGraph(cssFile,
-                        node,
-                        depth,
-                        $"focus/{node.Anchor.Url.LastUriPart()}",
-                        $"FocusGraph-{node.Anchor.Url.LastUriPart()}");
+                if (node.Traversals.Contains(traversal))
+                    this.RenderFocusGraph(cssFile, node, depth, traversal, $"{tName}Graph -{node.Anchor.Url.LastUriPart()}");
             }
         }
 
@@ -65,8 +59,8 @@ namespace FGraph
             focusSENode.Class = "focus";
             seGroupFocus.AppendNode(focusSENode);
 
-            seGroupParents.AppendNodes(TraverseParents(focusGraphNode, focusSENode, "focus/*", 1));
-            seGroupFocus.AppendChildren(TraverseChildren(focusGraphNode, focusSENode, "focus/*", depth));
+            seGroupParents.AppendNodes(TraverseParents(focusGraphNode, focusSENode, $"{traversalName}/*", 1));
+            seGroupFocus.AppendChildren(TraverseChildren(focusGraphNode, focusSENode, $"{traversalName}/*", depth));
 
             e.Render(seGroupParents);
         }
