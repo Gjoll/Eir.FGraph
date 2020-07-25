@@ -21,7 +21,7 @@ namespace FGraph
                 String tName = traversal.ToMachineName();
                 // Only render top level (profile) nodes.
                 if (node.Traversals.Contains(traversal))
-                    this.RenderFocusGraph(cssFile, node, depth, traversal, $"{tName}Graph -{node.Anchor.Url.LastUriPart()}");
+                    this.RenderFocusGraph(cssFile, node, depth, traversal, $"{tName}Graph-{node.Anchor.Url.LastUriPart()}");
             }
         }
 

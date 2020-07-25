@@ -108,7 +108,7 @@ namespace FGraph.Tests
             f.Load(TestFile("FocusRenderTest1.nodeGraph"));
             f.OutputDir = @"c:\Temp\FGraphTests";
             f.ProcessLinks();
-            f.RenderFocusGraphs(TestFile("FocusRenderTest1.css"), 1);
+            f.RenderFocusGraphs(TestFile("FocusRenderTest1.css"), "Focus", 1);
             f.SaveAll();
 
             Debug.Assert(f.HasErrors == false);
