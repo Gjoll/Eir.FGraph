@@ -24,6 +24,7 @@ namespace FGraph
         public String ExtensionNode_CssClass = "value";
         public String FixNode_CssClass = "value";
         public String PatternNode_CssClass = "value";
+        List<System.Threading.Tasks.Task> tasks = new List<System.Threading.Tasks.Task>();
 
         public bool ShowClass { get; set; } = true;
         public string GraphName { get; set; } = null;
@@ -127,8 +128,9 @@ namespace FGraph
             {
                 this.ParseItemError(path, fcn, $"{path} not found");
             }
-        }
 
+            WaitForTasks(0);
+        }
 
         void LoadResourceDir(String path)
         {
@@ -140,8 +142,57 @@ namespace FGraph
                 LoadResourceFile(file);
         }
 
+        void WaitForTasks(Int32 count)
+        {
+            while (true)
+            {
+                Int32 runningCount = 0;
+                lock (this.tasks)
+                {
+                    runningCount = this.tasks.Count;
+                }
+
+                if (runningCount <= count)
+                    return;
+                Thread.Sleep(250);
+            }
+        }
 
         void LoadResourceFile(String path)
+        {
+            WaitForTasks(10);
+            System.Threading.Tasks.Task t = null;
+            t = new System.Threading.Tasks.Task(
+                () =>
+                {
+                    try
+                    {
+                        this.DoLoadResourceFile(path);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                    finally
+                    {
+                        lock (this.tasks)
+                        {
+                            tasks.Remove(t);
+                        }
+                    }
+                });
+
+            lock (this.tasks)
+            {
+                this.tasks.Add(t);
+            }
+
+            t.Start();
+        }
+
+
+        void DoLoadResourceFile(String path)
         {
             DomainResource domainResource;
             switch (Path.GetExtension(path).ToUpper(CultureInfo.InvariantCulture))
@@ -224,7 +275,7 @@ namespace FGraph
             }
         }
 
-        public void LoadItem(String sourceFile, JToken item)
+        void LoadItem(String sourceFile, JToken item)
         {
             JObject j = item as JObject;
             foreach (KeyValuePair<String, JToken> kvp in j)

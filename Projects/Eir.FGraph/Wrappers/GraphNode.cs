@@ -15,9 +15,21 @@ namespace FGraph
         /// </summary>
         public class Link
         {
-            public GraphLink Traversal { get; set; }
-            public GraphNode Node { get; set; }
-            public Int32 Depth { get; set; }
+            public GraphLink Traversal { get; }
+            public GraphNode Node { get; }
+            public Int32 Depth { get; }
+            public String CssSuffix { get; }
+
+            public Link(GraphLink traversal,
+                GraphNode node,
+                Int32 depth,
+                String cssSuffix)
+            {
+                this.Traversal = traversal;
+                this.Node = node;
+                this.Depth = depth;
+                this.CssSuffix = cssSuffix;
+            }
         }
 
         /// <summary>
@@ -77,7 +89,7 @@ namespace FGraph
         /// </summary>
         public String ElementId { get; set; }
 
-        public GraphNode(FGrapher fGraph, String sourceFile, String traceMsg, String cssClass) : 
+        public GraphNode(FGrapher fGraph, String sourceFile, String traceMsg, String cssClass) :
             base(fGraph, sourceFile, traceMsg)
         {
             this.CssClass = cssClass;
@@ -111,12 +123,7 @@ namespace FGraph
             if (AlreadyLinked(this.ChildLinks, child))
                 return;
 
-            Link link = new Link
-            {
-                Node = child,
-                Traversal = gLink,
-                Depth = depth
-            };
+            Link link = new Link(gLink, child, depth, gLink.CssSuffix);
             this.ChildLinks.Add(link);
         }
 
@@ -125,12 +132,7 @@ namespace FGraph
             if (AlreadyLinked(this.ParentLinks, parent))
                 return;
 
-            Link link = new Link
-            {
-                Node = parent,
-                Traversal = gLink,
-                Depth = depth
-            };
+            Link link = new Link(gLink, parent, depth, "");
             this.ParentLinks.Add(link);
         }
     }

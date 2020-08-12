@@ -55,7 +55,7 @@ namespace FGraph
             seGroupParents.AppendChild(seGroupFocus);
             seGroupFocus.AppendChild(seGroupChildren);
 
-            SENode focusSENode = this.CreateNode(focusGraphNode);
+            SENode focusSENode = this.CreateNode(focusGraphNode, "");
             focusSENode.Class = "focus";
             seGroupFocus.AppendNode(focusSENode);
 
@@ -87,14 +87,14 @@ namespace FGraph
             return node;
         }
 
-        protected SENode CreateNode(GraphNode graphNode)
+        protected SENode CreateNode(GraphNode graphNode, String cssSuffix)
         {
             String hRef = graphNode.HRef;
             SENode node = new SENode
             {
                 HRef = hRef
             };
-            node.Class = graphNode.CssClass;
+            node.Class = $"{graphNode.CssClass}{cssSuffix}";
 
             String displayName = graphNode.DisplayName;
             //Debug.Assert(displayName != "Breast/Radiology/Composition");
@@ -211,7 +211,7 @@ namespace FGraph
                                 break;
                         }
                     }
-                    SENode parent = CreateNode(parentNode);
+                    SENode parent = CreateNode(parentNode, "");
                     yield return parent;
 
                     //SENode child = CreateNode(parentLink.Node);
@@ -246,7 +246,7 @@ namespace FGraph
                 )
                 {
                     SENodeGroup childContainer = new SENodeGroup("Child");
-                    SENode child = CreateNode(childLink.Node);
+                    SENode child = CreateNode(childLink.Node, childLink.CssSuffix);
                     childContainer.AppendNode(child);
 
                     childContainer.AppendChildren(TraverseChildren(childLink.Node,
