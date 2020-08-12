@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>FGraph</ToolCommandName>
-    <Version>2.16.0</Version>
+    <Version>2.16.2</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Gjoll/Eir.FGraph</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <PackageReference Include="Eir.DevTools" Version="1.16.5" />
+    <PackageReference Include="Eir.FhirKhit" Version="1.6.2" />
+    <PackageReference Include="Eir.FhirKhit.R4" Version="1.6.2" />
     <PackageReference Include="Hl7.Fhir.R4" Version="1.9.0" />
     <PackageReference Include="Hl7.Fhir.Serialization" Version="1.9.0" />
     <PackageReference Include="Hl7.Fhir.Specification.R4" Version="1.9.0" />
@@ -22,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Eir.FhirKhit\Projects\Eir.FhirKhit.R4\Eir.FhirKhit.R4.csproj" />
     <ProjectReference Include="..\SVGLib\SVGLib.csproj" />
   </ItemGroup>
 
