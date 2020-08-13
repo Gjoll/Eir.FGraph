@@ -18,17 +18,17 @@ namespace FGraph
             public GraphLink Traversal { get; }
             public GraphNode Node { get; }
             public Int32 Depth { get; }
-            public String CssSuffix { get; }
+            public String Key { get; }
 
             public Link(GraphLink traversal,
                 GraphNode node,
                 Int32 depth,
-                String cssSuffix)
+                String key)
             {
                 this.Traversal = traversal;
                 this.Node = node;
                 this.Depth = depth;
-                this.CssSuffix = cssSuffix;
+                this.Key = key;
             }
         }
 
@@ -123,7 +123,7 @@ namespace FGraph
             if (AlreadyLinked(this.ChildLinks, child))
                 return;
 
-            Link link = new Link(gLink, child, depth, gLink.CssSuffix);
+            Link link = new Link(gLink, child, depth, gLink.Key);
             this.ChildLinks.Add(link);
         }
 

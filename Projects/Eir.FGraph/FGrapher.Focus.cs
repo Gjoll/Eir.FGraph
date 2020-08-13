@@ -29,21 +29,27 @@ namespace FGraph
             String startNode,
             Int32 depth,
             String traversalName,
-            String graphName)
+            String graphName,
+            String keys)
         {
             if (this.graphNodesByName.TryGetValue(startNode, out GraphNode focusGraphNode) == false)
             {
                 this.ConversionError("RenderSingleNode", $"Start node '{startNode}' not found");
                 return;
             }
-            RenderFocusGraph(cssFile, focusGraphNode, depth, traversalName, graphName);
+
+            HashSet<String> keysHash = new HashSet<string>();
+            foreach (String key in keys.Split(','))
+                keysHash.Add(key);
+            RenderFocusGraph(cssFile, focusGraphNode, depth, traversalName, graphName, keysHash);
         }
 
         public void RenderFocusGraph(String cssFile,
             GraphNode focusGraphNode,
             Int32 depth,
             String traversalName,
-            String graphName)
+            String graphName,
+            HashSet<String> keys = null)
         {
             SvgEditor e = new SvgEditor(graphName);
             e.AddCssFile(cssFile);
@@ -55,13 +61,24 @@ namespace FGraph
             seGroupParents.AppendChild(seGroupFocus);
             seGroupFocus.AppendChild(seGroupChildren);
 
-            SENode focusSENode = this.CreateNode(focusGraphNode, "");
+            SENode focusSENode = this.CreateNode(focusGraphNode);
             focusSENode.Class = "focus";
             seGroupFocus.AppendNode(focusSENode);
-
-            seGroupParents.AppendNodes(TraverseParents(focusGraphNode, focusSENode, $"{traversalName}/*", 1));
-            seGroupFocus.AppendChildren(TraverseChildren(focusGraphNode, focusSENode, $"{traversalName}/*", depth));
-
+            {
+                IEnumerable<SENode> parentNodes = TraverseParents(focusGraphNode,
+                    focusSENode,
+                    $"{traversalName}/*",
+                    1);
+                seGroupParents.AppendNodes(parentNodes);
+            }
+            {
+                IEnumerable<SENodeGroup> childNodes = TraverseChildren(focusGraphNode, 
+                    focusSENode, 
+                    $"{traversalName}/*", 
+                    depth,
+                    keys);
+                seGroupFocus.AppendChildren(childNodes);
+            }
             e.Render(seGroupParents);
         }
 
@@ -87,14 +104,14 @@ namespace FGraph
             return node;
         }
 
-        protected SENode CreateNode(GraphNode graphNode, String cssSuffix)
+        protected SENode CreateNode(GraphNode graphNode)
         {
             String hRef = graphNode.HRef;
             SENode node = new SENode
             {
                 HRef = hRef
             };
-            node.Class = $"{graphNode.CssClass}{cssSuffix}";
+            node.Class = graphNode.CssClass;
 
             String displayName = graphNode.DisplayName;
             //Debug.Assert(displayName != "Breast/Radiology/Composition");
@@ -211,17 +228,8 @@ namespace FGraph
                                 break;
                         }
                     }
-                    SENode parent = CreateNode(parentNode, "");
+                    SENode parent = CreateNode(parentNode);
                     yield return parent;
-
-                    //SENode child = CreateNode(parentLink.Node);
-                    //parentContainer.AppendNode(child);
-
-                    //parentContainer.AppendChildren(TraverseChildren(parentLink.Node,
-                    //    child,
-                    //    traversalFilter,
-                    //    depth - parentLink.Depth));
-                    //yield return parentContainer;
                 }
             }
         }
@@ -229,7 +237,8 @@ namespace FGraph
         IEnumerable<SENodeGroup> TraverseChildren(GraphNode focusNode,
             SENode seFocusNode,
             String traversalFilter,
-            Int32 depth)
+            Int32 depth,
+            HashSet<String> keys)
         {
             Regex r = new Regex(traversalFilter);
 
@@ -237,22 +246,31 @@ namespace FGraph
             childNodes.Add(focusNode);
             focusNode.ChildLinks.SortByTraversalName();
 
+            bool HasKey(GraphNode.Link childLink)
+            {
+                if (keys == null)
+                    return true;
+                return keys.Contains(childLink.Key);
+            }
+
             foreach (GraphNode.Link childLink in focusNode.ChildLinks)
             {
                 if (
                     (depth > 0) &&
                     (r.IsMatch(childLink.Traversal.TraversalName)) &&
-                    (childNodes.Contains(childLink.Node) == false)
+                    (childNodes.Contains(childLink.Node) == false) &&
+                    (HasKey(childLink))
                 )
                 {
                     SENodeGroup childContainer = new SENodeGroup("Child");
-                    SENode child = CreateNode(childLink.Node, childLink.CssSuffix);
+                    SENode child = CreateNode(childLink.Node);
                     childContainer.AppendNode(child);
 
                     childContainer.AppendChildren(TraverseChildren(childLink.Node,
                         child,
                         traversalFilter,
-                        depth - childLink.Depth));
+                        depth - childLink.Depth,
+                        keys));
                     yield return childContainer;
                 }
             }
