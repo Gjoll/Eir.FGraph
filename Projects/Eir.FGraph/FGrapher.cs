@@ -14,6 +14,7 @@ using System.Threading;
 using Hl7.Fhir.Serialization;
 using System.Linq;
 using Eir.FhirKhit.R4;
+using System.Collections.Concurrent;
 
 namespace FGraph
 {
@@ -39,9 +40,9 @@ namespace FGraph
         }
         private string outputDir;
 
-        Dictionary<String, DomainResource> resources = new Dictionary<String, DomainResource>();
-        Dictionary<String, GraphNode> graphNodesByName = new Dictionary<string, GraphNode>();
-        Dictionary<GraphAnchor, GraphNode> graphNodesByAnchor = new Dictionary<GraphAnchor, GraphNode>();
+        ConcurrentDictionary<String, DomainResource> resources = new ConcurrentDictionary<String, DomainResource>();
+        ConcurrentDictionary<String, GraphNode> graphNodesByName = new ConcurrentDictionary<string, GraphNode>();
+        ConcurrentDictionary<GraphAnchor, GraphNode> graphNodesByAnchor = new ConcurrentDictionary<GraphAnchor, GraphNode>();
 
         List<GraphLink> graphLinks = new List<GraphLink>();
         List<SvgEditor> svgEditors = new List<SvgEditor>();
@@ -186,7 +187,8 @@ namespace FGraph
                     break;
             }
 
-            this.resources.Add(resourceUrl, domainResource);
+            if (this.resources.TryAdd(resourceUrl, domainResource) == false)
+                throw new Exception($"Error adding item to resources");
 
             // We expect to only load resources all with the same base resoruce name.
             String rBaseUrl = resourceUrl.FhirBaseUrl();
@@ -287,9 +289,14 @@ namespace FGraph
                     {
                         GraphNode node = new GraphNode(this, sourceFile, value);
                         this.SetAnchor(node);
-                        this.graphNodesByName.Add(node.NodeName, node);
+                        if (this.graphNodesByName.TryAdd(node.NodeName, node) == false)
+                            throw new Exception($"Error adding item to graphNodesByAnchor");
+
                         if (node.Anchor != null)
-                            this.graphNodesByAnchor.Add(node.Anchor, node);
+                        {
+                            if (this.graphNodesByAnchor.TryAdd(node.Anchor, node) == false)
+                                throw new Exception($"Error adding item to graphNodesByAnchor");
+                        }
                     }
                     break;
 
@@ -322,21 +329,30 @@ namespace FGraph
                 case "linkByReference":
                     {
                         GraphLinkByReference link = new GraphLinkByReference(this, sourceFile, value);
-                        this.graphLinks.Add(link);
+                        lock (this.graphLinks)
+                        {
+                            this.graphLinks.Add(link);
+                        }
                     }
                     break;
 
                 case "linkByBinding":
                     {
                         GraphLinkByBinding link = new GraphLinkByBinding(this, sourceFile, value);
-                        this.graphLinks.Add(link);
+                        lock (this.graphLinks)
+                        {
+                            this.graphLinks.Add(link);
+                        }
                     }
                     break;
 
                 case "linkByName":
                     {
                         GraphLinkByName link = new GraphLinkByName(this, sourceFile, value);
-                        this.graphLinks.Add(link);
+                        lock (this.graphLinks)
+                        {
+                            this.graphLinks.Add(link);
+                        }
                     }
                     break;
 
@@ -417,8 +433,11 @@ namespace FGraph
 
         public void ProcessLinks()
         {
-            foreach (GraphLink link in this.graphLinks)
-                ProcessLink(link);
+            lock (this.graphLinks)
+            {
+                foreach (GraphLink link in this.graphLinks)
+                    ProcessLink(link);
+            }
         }
 
         List<GraphNode> FindNamedNodes(String sourceFile, String name)
@@ -727,9 +746,14 @@ namespace FGraph
                     Anchor = targetAnchor,
                     HRef = targetAnchor.Url
                 };
-                this.graphNodesByName.Add(targetNode.NodeName, targetNode);
+                if (this.graphNodesByName.TryAdd(targetNode.NodeName, targetNode) == false)
+                    throw new Exception($"Error adding item to graphNodesByAnchor");
+
                 if (targetNode.Anchor != null)
-                    this.graphNodesByAnchor.Add(targetNode.Anchor, targetNode);
+                {
+                    if (this.graphNodesByAnchor.TryAdd(targetNode.Anchor, targetNode) == false)
+                        throw new Exception($"Error adding item to graphNodesByAnchor");
+                }
                 return targetNode;
             }
 
@@ -838,19 +862,21 @@ namespace FGraph
 
         public void SaveAll()
         {
-            if (this.svgEditors.Count == 0)
-                return;
-
-            this.ConversionInfo("SaveAll", $"Writing svg files to {this.outputDir}");
-            foreach (SvgEditor svgEditor in this.svgEditors)
+            lock (this.graphLinks)
             {
-                String fileName = svgEditor.Name.Replace(":", "-");
-                String outputFile = $"{this.outputDir}\\{fileName}.svg";
-                svgEditor.Save(outputFile);
-                if (this.DebugFlag)
-                    this.ConversionInfo("SaveAll", $"Writing svg file {outputFile}");
+                if (this.svgEditors.Count == 0)
+                    return;
+
+                this.ConversionInfo("SaveAll", $"Writing svg files to {this.outputDir}");
+                foreach (SvgEditor svgEditor in this.svgEditors)
+                {
+                    String fileName = svgEditor.Name.Replace(":", "-");
+                    String outputFile = $"{this.outputDir}\\{fileName}.svg";
+                    svgEditor.Save(outputFile);
+                    if (this.DebugFlag)
+                        this.ConversionInfo("SaveAll", $"Writing svg file {outputFile}");
+                }
             }
         }
-
     }
 }

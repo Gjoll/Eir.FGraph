@@ -48,7 +48,10 @@ namespace FGraph
             SvgEditor e = new SvgEditor(graphName);
             e.AddCssFile(cssFile);
 
-            this.svgEditors.Add(e);
+            lock (this.svgEditors)
+            {
+                this.svgEditors.Add(e);
+            }
             SENodeGroup seGroupParents = new SENodeGroup("parents");
             SENodeGroup seGroupFocus = new SENodeGroup("focus");
             SENodeGroup seGroupChildren = new SENodeGroup("children");
