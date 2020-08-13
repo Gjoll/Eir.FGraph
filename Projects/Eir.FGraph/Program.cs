@@ -16,6 +16,7 @@ namespace FGraph
                 public String name { get; set; }
                 public String param1 { get; set; }
                 public String param2 { get; set; }
+                public String param3 { get; set; }
                 public Int32? depth { get; set; }
                 public String cssFile { get; set; }
             };
@@ -159,7 +160,14 @@ namespace FGraph
                             throw new Exception($"Rendering.param1 must be start node");
                         if (String.IsNullOrEmpty(rendering.param2))
                             throw new Exception($"Rendering.param2 must graph name");
-                        this.fGrapher.RenderSingleNode(cssFile, rendering.param1, depth, "focus", rendering.param2);
+                        if (String.IsNullOrEmpty(rendering.param3))
+                            throw new Exception($"Rendering.param3 must key[s]");
+                        this.fGrapher.RenderSingleNode(cssFile,
+                            rendering.param1,
+                            depth,
+                            "focus",
+                            rendering.param2,
+                            rendering.param3);
                         break;
                     
                     default:
