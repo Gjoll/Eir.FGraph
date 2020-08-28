@@ -114,7 +114,8 @@ namespace FGraph
 
             this.fGrapher.ConversionInfo(fcn, $"Loading");
             foreach (String resourcePath in options.resourcePaths)
-                this.fGrapher.LoadResources(resourcePath);
+                this.fGrapher.LoadResourcesStart(resourcePath);
+            this.fGrapher.LoadResourcesWaitComplete();
 
             if (String.IsNullOrEmpty(options.inputPath))
                 throw new Exception("Missing 'inputPath' option setting");

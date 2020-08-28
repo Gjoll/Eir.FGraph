@@ -28,7 +28,8 @@ namespace FGraph.Tests
         {
             FGrapher f = new FGrapher();
             f.BaseUrl = "http://hl7.org/fhir/us/breast-radiology/";
-            f.LoadResources(TestFile("profiles"));
+            f.LoadResourcesStart(TestFile("profiles"));
+            f.LoadResourcesWaitComplete();
             Assert.True(String.Compare(f.BaseUrl, "http://hl7.org/fhir/us/breast-radiology/", StringComparison.InvariantCulture) == 0);
             Assert.True(f.TryGetProfile("http://hl7.org/fhir/us/breast-radiology/StructureDefinition/BreastRadiologyComposition", out StructureDefinition sd));
             Assert.True(String.Compare(sd.Url, "http://hl7.org/fhir/us/breast-radiology/StructureDefinition/BreastRadiologyComposition", StringComparison.InvariantCulture) == 0);

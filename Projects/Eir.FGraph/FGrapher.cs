@@ -129,7 +129,10 @@ namespace FGraph
             {
                 this.ParseItemError(path, fcn, $"{path} not found");
             }
+        }
 
+        public void LoadResourcesWaitComplete()
+        {
             WaitForTasks(0);
         }
 
@@ -223,8 +226,11 @@ namespace FGraph
                     if ((sDef.Snapshot == null) ||
                         (sDef.Snapshot.Element.Count == 0))
                     {
+                        Debug.Assert(sDef.Name.Contains("ArchitecturalDistortion") == false);
                         SnapshotCreator.Create(sDef);
                         sDef.SaveJson(path);
+                        Debug.Assert(sDef.Snapshot != null);
+                        Debug.Assert(sDef.Snapshot.Element.Count > 0);
                     }
                     resourceUrl = sDef.Url;
                     break;
@@ -622,6 +628,12 @@ namespace FGraph
             {
                 this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
                 return false;
+            }
+
+            if (sourceNode.SDef.BaseDefinition == "http://hl7.org/fhir/StructureDefinition/Extension")
+            {
+                elementSnap = elementDiff;
+                return true;
             }
 
             elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
