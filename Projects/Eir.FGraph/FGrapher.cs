@@ -117,7 +117,7 @@ namespace FGraph
         public bool TryGetProfile(String url, out CodeSystem cs) => this.TryGetResource<CodeSystem>(url, out cs);
 
 
-        public void LoadResources(String path)
+        public void LoadResourcesStart(String path)
         {
             const String fcn = "LoadResources";
 
