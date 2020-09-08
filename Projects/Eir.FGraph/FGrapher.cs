@@ -15,6 +15,7 @@ using Hl7.Fhir.Serialization;
 using System.Linq;
 using Eir.FhirKhit.R4;
 using System.Collections.Concurrent;
+using Task = System.Threading.Tasks.Task;
 
 namespace FGraph
 {
@@ -25,7 +26,7 @@ namespace FGraph
         public String ExtensionNode_CssClass = "value";
         public String FixNode_CssClass = "value";
         public String PatternNode_CssClass = "value";
-        List<System.Threading.Tasks.Task> tasks = new List<System.Threading.Tasks.Task>();
+        List<Task> tasks = new List<Task>();
 
         public bool ShowClass { get; set; } = true;
         public string GraphName { get; set; } = null;
@@ -150,53 +151,47 @@ namespace FGraph
         {
             while (true)
             {
+                Task[] currentTasks;
                 Int32 runningCount = 0;
                 lock (this.tasks)
                 {
-                    runningCount = this.tasks.Count;
+                    currentTasks = this.tasks.ToArray();
                 }
 
-                if (runningCount <= count)
+                if (runningCount <= currentTasks.Length)
                     return;
-                Thread.Sleep(250);
+
+                Int32 index = Task.WaitAny(currentTasks, 1000);
+                if (index >= 0)
+                {
+                    lock (this.tasks)
+                    {
+                        this.tasks.Remove(currentTasks[index]);
+                    }
+                }
             }
         }
 
         void LoadResourceFile(String path)
         {
             WaitForTasks(10);
-            System.Threading.Tasks.Task t = null;
-            t = new System.Threading.Tasks.Task(
-                () =>
-                {
-                    try
-                    {
-                        this.DoLoadResourceFile(path);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
-                    }
-                    finally
-                    {
-                        lock (this.tasks)
-                        {
-                            tasks.Remove(t);
-                        }
-                    }
-                });
-
-            lock (this.tasks)
+            try
             {
-                this.tasks.Add(t);
+                Task t = this.DoLoadResourceFile(path);
+                lock (this.tasks)
+                {
+                    this.tasks.Add(t);
+                }
             }
-
-            t.Start();
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
 
-        void DoLoadResourceFile(String path)
+        async Task DoLoadResourceFile(String path)
         {
             DomainResource domainResource;
             switch (Path.GetExtension(path).ToUpper(CultureInfo.InvariantCulture))
@@ -226,11 +221,13 @@ namespace FGraph
                     if ((sDef.Snapshot == null) ||
                         (sDef.Snapshot.Element.Count == 0))
                     {
+                        this.ConversionInfo("DoLoadResourceFile", $"Start snapshot of {sDef.Name}");
                         Debug.Assert(sDef.Name.Contains("ArchitecturalDistortion") == false);
-                        SnapshotCreator.Create(sDef);
+                        await SnapshotCreator.CreateAsync(sDef);
                         sDef.SaveJson(path);
                         Debug.Assert(sDef.Snapshot != null);
                         Debug.Assert(sDef.Snapshot.Element.Count > 0);
+                        this.ConversionInfo("DoLoadResourceFile", $"Completed snapshot of {sDef.Name}");
                     }
                     resourceUrl = sDef.Url;
                     break;
