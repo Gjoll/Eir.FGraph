@@ -26,7 +26,7 @@ namespace FGraph
         public String ExtensionNode_CssClass = "value";
         public String FixNode_CssClass = "value";
         public String PatternNode_CssClass = "value";
-        List<Task> tasks = new List<Task>();
+        ConcurrentBag<Task> tasks = new ConcurrentBag<Task>();
 
         public bool ShowClass { get; set; } = true;
         public string GraphName { get; set; } = null;
@@ -134,7 +134,8 @@ namespace FGraph
 
         public void LoadResourcesWaitComplete()
         {
-            WaitForTasks(0);
+            Task[] currentTasks = this.tasks.ToArray();
+            Task.WaitAll(currentTasks);
         }
 
         void LoadResourceDir(String path)
@@ -147,41 +148,12 @@ namespace FGraph
                 LoadResourceFile(file);
         }
 
-        void WaitForTasks(Int32 count)
-        {
-            while (true)
-            {
-                Task[] currentTasks;
-                Int32 runningCount = 0;
-                lock (this.tasks)
-                {
-                    currentTasks = this.tasks.ToArray();
-                }
-
-                if (runningCount <= currentTasks.Length)
-                    return;
-
-                Int32 index = Task.WaitAny(currentTasks, 1000);
-                if (index >= 0)
-                {
-                    lock (this.tasks)
-                    {
-                        this.tasks.Remove(currentTasks[index]);
-                    }
-                }
-            }
-        }
-
         void LoadResourceFile(String path)
         {
-            WaitForTasks(10);
             try
             {
                 Task t = this.DoLoadResourceFile(path);
-                lock (this.tasks)
-                {
-                    this.tasks.Add(t);
-                }
+                this.tasks.Add(t);
             }
             catch (Exception e)
             {
@@ -194,19 +166,20 @@ namespace FGraph
         async Task DoLoadResourceFile(String path)
         {
             DomainResource domainResource;
+            String text = await File.ReadAllTextAsync(path);
             switch (Path.GetExtension(path).ToUpper(CultureInfo.InvariantCulture))
             {
                 case ".XML":
                     {
                         FhirXmlParser parser = new FhirXmlParser();
-                        domainResource = parser.Parse<DomainResource>(File.ReadAllText(path));
+                        domainResource = parser.Parse<DomainResource>(text);
                         break;
                     }
 
                 case ".JSON":
                     {
                         FhirJsonParser parser = new FhirJsonParser();
-                        domainResource = parser.Parse<DomainResource>(File.ReadAllText(path));
+                        domainResource = parser.Parse<DomainResource>(text);
                         break;
                     }
 
