@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="Eir.DevTools" Version="1.16.5" />
-    <PackageReference Include="Eir.FhirKhit.R4" Version="1.6.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
@@ -35,6 +34,9 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\HL7\fhir-net-api\src\Hl7.Fhir.Core\Hl7.Fhir.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\HL7\fhir-net-api\src\Hl7.Fhir.Specification\Hl7.Fhir.Specification.csproj" />
+    <ProjectReference Include="..\..\..\Eir.FhirKhit\Projects\Eir.FhirKhit.R4\Eir.FhirKhit.R4.csproj" />
     <ProjectReference Include="..\Eir.FGraph\Eir.FGraph.csproj" />
   </ItemGroup>
 
