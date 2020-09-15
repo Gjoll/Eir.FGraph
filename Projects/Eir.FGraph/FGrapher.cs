@@ -222,7 +222,6 @@ namespace FGraph
                         (sDef.Snapshot.Element.Count == 0))
                     {
                         this.ConversionInfo("DoLoadResourceFile", $"Start snapshot of {sDef.Name}");
-                        Debug.Assert(sDef.Name.Contains("ArchitecturalDistortion") == false);
                         await SnapshotCreator.CreateAsync(sDef);
                         sDef.SaveJson(path);
                         Debug.Assert(sDef.Snapshot != null);
