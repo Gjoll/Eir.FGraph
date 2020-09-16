@@ -6,14 +6,18 @@ using System.Text;
 
 namespace FGraph
 {
-    [DebuggerDisplay("{this.Title} [{this.nodes.Count}/{this._childGroups.Count}]")]
+    [DebuggerDisplay("{this.Title} [{this.nodes.Count}/{this.childGroups.Count}]")]
     public class SENodeGroup
     {
-        public String Class { get; set; }
-
         Int32 maxLhsAnnotation = -1;
         Int32 maxRhsAnnotation = -1;
+        List<SENode> nodes = new List<SENode>();
+        List<SENodeGroup> childGroups = new List<SENodeGroup>();
 
+        public String Class { get; set; }
+        public String Title { get; set; }
+        public IEnumerable<SENode> Nodes => this.nodes;
+        public IEnumerable<SENodeGroup> ChildGroups => this.childGroups;
         public Int32 MaxRhsAnnotation()
         {
             if (this.maxRhsAnnotation == -1)
@@ -42,7 +46,6 @@ namespace FGraph
             }
             return this.maxRhsAnnotation;
         }
-
 
         public Int32 MaxLhsAnnotation()
         {
@@ -73,14 +76,6 @@ namespace FGraph
             return this.maxLhsAnnotation;
         }
 
-        public String Title { get; set; }
-
-        public IEnumerable<SENode> Nodes => this.nodes;
-        List<SENode> nodes = new List<SENode>();
-
-        public IEnumerable<SENodeGroup> ChildGroups => this._childGroups;
-        List<SENodeGroup> _childGroups = new List<SENodeGroup>();
-
         public SENodeGroup(String title)
         {
             if (title == null)
@@ -94,8 +89,8 @@ namespace FGraph
         public void Sort()
         {
             this.nodes.Sort((a, b) => a.AllText().CompareTo(b.AllText()));
-            this._childGroups.Sort((a, b) => a.Title.CompareTo(b.Title));
-            foreach (SENodeGroup child in this._childGroups)
+            this.childGroups.Sort((a, b) => a.Title.CompareTo(b.Title));
+            foreach (SENodeGroup child in this.childGroups)
                 child.Sort();
         }
 
@@ -112,18 +107,18 @@ namespace FGraph
 
         public void AppendChild(SENodeGroup nodeGroup)
         {
-            this._childGroups.Add(nodeGroup);
+            this.childGroups.Add(nodeGroup);
         }
 
         public void AppendChildren(IEnumerable<SENodeGroup> nodeGroups)
         {
-            this._childGroups.AddRange(nodeGroups);
+            this.childGroups.AddRange(nodeGroups);
         }
 
         public SENodeGroup AppendChild(String title)
         {
             SENodeGroup retVal = new SENodeGroup(title);
-            this._childGroups.Add(retVal);
+            this.childGroups.Add(retVal);
             return retVal;
         }
     }

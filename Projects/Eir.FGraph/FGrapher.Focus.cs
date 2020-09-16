@@ -199,17 +199,16 @@ namespace FGraph
         {
             const String fcn = "TraverseParents";
 
-            Regex r = new Regex(traversalFilter);
+            Regex traversalFilterRex = new Regex(traversalFilter);
 
             HashSet<GraphNode> parentNodes = new HashSet<GraphNode>();
             parentNodes.Add(focusNode);
-            focusNode.ParentLinks.SortByTraversalName();
 
             foreach (GraphNode.Link parentLink in focusNode.ParentLinks)
             {
                 if (
                     (depth >= 0) &&
-                    (r.IsMatch(parentLink.Traversal.TraversalName)) &&
+                    (traversalFilterRex.IsMatch(parentLink.Traversal.TraversalName)) &&
                     (parentNodes.Contains(parentLink.Node) == false)
                 )
                 {
@@ -243,11 +242,10 @@ namespace FGraph
             Int32 depth,
             HashSet<String> keys)
         {
-            Regex r = new Regex(traversalFilter);
+            Regex traversalFilterRex = new Regex(traversalFilter);
 
             HashSet<GraphNode> childNodes = new HashSet<GraphNode>();
             childNodes.Add(focusNode);
-            focusNode.ChildLinks.SortByTraversalName();
 
             bool HasKey(GraphNode.Link childLink)
             {
@@ -260,7 +258,7 @@ namespace FGraph
             {
                 if (
                     (depth > 0) &&
-                    (r.IsMatch(childLink.Traversal.TraversalName)) &&
+                    (traversalFilterRex.IsMatch(childLink.Traversal.TraversalName)) &&
                     (childNodes.Contains(childLink.Node) == false) &&
                     (HasKey(childLink))
                 )
