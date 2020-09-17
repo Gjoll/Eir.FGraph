@@ -247,12 +247,7 @@ namespace FGraph
             HashSet<GraphNode> childNodes = new HashSet<GraphNode>();
             childNodes.Add(focusNode);
 
-            bool HasKey(GraphNode.Link childLink)
-            {
-                if (keys == null)
-                    return true;
-                return keys.Contains(childLink.Key);
-            }
+            bool HasKey(GraphNode.Link childLink) => (keys == null) || keys.Contains(childLink.Key);
 
             foreach (GraphNode.Link childLink in focusNode.ChildLinks)
             {
@@ -263,8 +258,9 @@ namespace FGraph
                     (HasKey(childLink))
                 )
                 {
-                    SENodeGroup childContainer = new SENodeGroup("Child");
                     SENode child = CreateNode(childLink.Node);
+
+                    SENodeGroup childContainer = new SENodeGroup(child.AllText());
                     childContainer.AppendNode(child);
 
                     childContainer.AppendChildren(TraverseChildren(childLink.Node,
