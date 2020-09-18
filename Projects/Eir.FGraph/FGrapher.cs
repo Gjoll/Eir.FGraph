@@ -195,7 +195,8 @@ namespace FGraph
                         (sDef.Snapshot.Element.Count == 0))
                     {
                         this.ConversionInfo("DoLoadResourceFile", $"Start snapshot of {sDef.Name}");
-                        await SnapshotCreator.CreateAsync(sDef);
+                        SnapshotCreator.Create(sDef);
+
                         sDef.SaveJson(path);
                         Debug.Assert(sDef.Snapshot != null);
                         Debug.Assert(sDef.Snapshot.Element.Count > 0);
