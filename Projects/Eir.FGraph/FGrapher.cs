@@ -361,14 +361,6 @@ namespace FGraph
                     }
                     break;
 
-                case "linkByReference2":
-                    {
-                        GraphLinkByReference2 link = new GraphLinkByReference2(this, sourceFile, value);
-                        lock (this.graphLinks)
-                            this.graphLinks.Add(link);
-                    }
-                    break;
-
                 case "linkByBinding":
                     {
                         GraphLinkByBinding link = new GraphLinkByBinding(this, sourceFile, value);
@@ -509,10 +501,6 @@ namespace FGraph
                     ProcessLink(linkByRef);
                     break;
 
-                case GraphLinkByReference2 linkByRef:
-                    ProcessLink(linkByRef);
-                    break;
-
                 default:
                     throw new NotImplementedException($"Unimplemented link type.");
             }
@@ -630,110 +618,21 @@ namespace FGraph
         {
             const String fcn = "ProcessLink";
 
-            void ProcessNodeDefault(GraphNode sourceNode,
+            void LinkToProfile(GraphNode sourceNode,
                 ElementDefinition elementSnap,
-                ElementDefinition.TypeRefComponent typeRef)
+                ElementDefinition.TypeRefComponent typeRef,
+                IEnumerable<String> profiles)
             {
-                foreach (String targetRef in typeRef.Profile)
+                sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
+
+                foreach (String targetRef in profiles)
                 {
-                    sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
                     GraphAnchor targetAnchor = new GraphAnchor(targetRef, null);
                     GraphNode targetNode = GetTargetNode(targetAnchor);
                     sourceNode.AddChild(link, link.Depth, targetNode);
                     targetNode.AddParent(link, link.Depth, sourceNode);
                     if (this.DebugFlag)
                         this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
-                }
-            }
-
-
-            void ProcessNodeExtension(GraphLink link,
-                GraphNode sourceNode,
-                ElementDefinition elementSnap,
-                ElementDefinition.TypeRefComponent typeRef)
-            {
-                {
-                    String subExtensionId = $"{elementSnap.ElementId}.extension";
-                    if (TryGetChildElement(sourceNode, subExtensionId,
-                            out ElementDefinition subExtensionDiff,
-                            out ElementDefinition subExtensionSnap) == false)
-                    {
-                        this.ParseItemError(sourceNode.SourceFile,
-                            "ProcessNodeExtension",
-                            $"Sub extension element '{subExtensionId}' missing");
-                        return;
-                    }
-
-                    if (subExtensionSnap.Max != "0")
-                    {
-                        this.ParseItemError(sourceNode.SourceFile,
-                            "ProcessNodeExtension",
-                            $"Extensions calling extensions not yet implemented");
-                        return;
-                    }
-                }
-                String extensionName;
-                {
-                    String extensionUrlId = $"{elementSnap.ElementId}.url";
-                    if (TryGetChildElement(sourceNode,
-                            extensionUrlId,
-                            out ElementDefinition urlDiff,
-                            out ElementDefinition urlSnap) == false)
-                    {
-                        this.ParseItemError(sourceNode.SourceFile,
-                            "ProcessNodeExtension",
-                            $"Extension url element '{extensionUrlId}' missing");
-                        return;
-                    }
-
-                    FhirUri urlString = urlSnap.Fixed as FhirUri;
-                    if (urlString == null)
-                    {
-                        this.ParseItemError(sourceNode.SourceFile,
-                            "ProcessNodeExtension",
-                            $"Extension url element '{extensionUrlId}' missing fixed value or value is not a uri");
-                        return;
-                    }
-                    extensionName = urlString.Value;
-                }
-
-                String extensionValueId = $"{elementSnap.ElementId}.value[x]";
-                if (TryGetChildElement(sourceNode,
-                        extensionValueId,
-                        out ElementDefinition valueDiff,
-                        out ElementDefinition valueSnap) == false)
-                {
-                    this.ParseItemError(sourceNode.SourceFile,
-                        "ProcessNodeExtension",
-                        $"Extension value element '{extensionValueId}' missing");
-                    return;
-                }
-
-                GraphNode targetNode = new GraphNode(this, "ProcessNodeExtension", "FGrapher.ProcessNodeExtension", ExtensionNode_CssClass, false);
-                targetNode.HRef = this.HRefStructDef(sourceNode.Anchor.Url.LastUriPart(), elementSnap.ElementId);
-                targetNode.DisplayName = extensionName;
-                targetNode.LhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
-                sourceNode.AddChild(link, 0, targetNode);
-                targetNode.AddParent(link, 0, sourceNode);
-                if (this.DebugFlag)
-                    this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (binding) {targetNode.NodeName}");
-
-                this.ProcessNodeBindings(link, targetNode, extensionValueId, valueDiff, valueSnap);
-            }
-
-            void ProcessNodeReference(GraphNode sourceNode,
-                ElementDefinition elementSnap,
-                ElementDefinition.TypeRefComponent typeRef)
-            {
-                foreach (String targetRef in typeRef.TargetProfile)
-                {
-                    sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
-                    GraphAnchor targetAnchor = new GraphAnchor(targetRef, null);
-                    GraphNode targetNode = GetTargetNode(targetAnchor);
-                    sourceNode.AddChild(link, link.Depth, targetNode);
-                    targetNode.AddParent(link, link.Depth, sourceNode);
-                    if (this.DebugFlag)
-                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (targetProfile) {targetNode.NodeName}");
                 }
             }
 
@@ -750,68 +649,10 @@ namespace FGraph
 
                 foreach (ElementDefinition.TypeRefComponent typeRef in elementSnap.Type)
                 {
-                    switch (typeRef.Code)
-                    {
-                        case "Reference":
-                        case "canonical":
-                            ProcessNodeReference(sourceNode, elementSnap, typeRef);
-                            break;
-
-                        case "Extension":
-                            ProcessNodeExtension(link, sourceNode, elementSnap, typeRef);
-                            break;
-
-                        default:
-                            ProcessNodeDefault(sourceNode, elementSnap, typeRef);
-                            break;
-                    }
-                }
-            }
-
-            if (this.DebugFlag)
-                this.ConversionInfo("LinkByReference", $"{link.Source} -> {link.Item}");
-            List<GraphNode> sources = FindNamedNodes(link.TraceMsg(), link.Source);
-            foreach (GraphNode sourceNode in sources)
-                ProcessNode(sourceNode, link);
-        }
-
-        void ProcessLink(GraphLinkByReference2 link)
-        {
-            const String fcn = "ProcessLink";
-
-            void LinkToProfile(GraphNode sourceNode,
-                ElementDefinition elementSnap,
-                ElementDefinition.TypeRefComponent typeRef)
-            {
-                sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
-
-                foreach (String targetRef in typeRef.Profile)
-                {
-                    GraphAnchor targetAnchor = new GraphAnchor(targetRef, null);
-                    GraphNode targetNode = GetTargetNode(targetAnchor);
-                    sourceNode.AddChild(link, link.Depth, targetNode);
-                    targetNode.AddParent(link, link.Depth, sourceNode);
-                    if (this.DebugFlag)
-                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
-                }
-            }
-
-
-            void ProcessNode(GraphNode sourceNode,
-                GraphLinkByReference2 link)
-            {
-                String linkElementId = link.Item;
-                if (this.DebugFlag)
-                    this.ConversionInfo(fcn, $"{sourceNode} -> {linkElementId}");
-                ElementDefinition elementDiff;
-                ElementDefinition elementSnap;
-                if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
-                    return;
-
-                foreach (ElementDefinition.TypeRefComponent typeRef in elementSnap.Type)
-                {
                     if (typeRef.Profile.Count() > 0)
-                        LinkToProfile(sourceNode, elementSnap, typeRef);
+                        LinkToProfile(sourceNode, elementSnap, typeRef, typeRef.Profile);
+                    else if (typeRef.TargetProfile.Count() > 0)
+                        LinkToProfile(sourceNode, elementSnap, typeRef, typeRef.TargetProfile);
                     else
                         throw new NotImplementedException();
                 }
