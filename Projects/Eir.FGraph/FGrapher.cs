@@ -356,9 +356,15 @@ namespace FGraph
                     {
                         GraphLinkByReference link = new GraphLinkByReference(this, sourceFile, value);
                         lock (this.graphLinks)
-                        {
                             this.graphLinks.Add(link);
-                        }
+                    }
+                    break;
+
+                case "linkByReference2":
+                    {
+                        GraphLinkByReference2 link = new GraphLinkByReference2(this, sourceFile, value);
+                        lock (this.graphLinks)
+                            this.graphLinks.Add(link);
                     }
                     break;
 
@@ -366,9 +372,7 @@ namespace FGraph
                     {
                         GraphLinkByBinding link = new GraphLinkByBinding(this, sourceFile, value);
                         lock (this.graphLinks)
-                        {
                             this.graphLinks.Add(link);
-                        }
                     }
                     break;
 
@@ -487,6 +491,8 @@ namespace FGraph
 
         void ProcessLink(GraphLink link)
         {
+            if (link.breakFlag)
+                Debugger.Break();
             this.currentItem = link.TraceMsg();
             switch (link)
             {
@@ -502,6 +508,10 @@ namespace FGraph
                     ProcessLink(linkByRef);
                     break;
 
+                case GraphLinkByReference2 linkByRef:
+                    ProcessLink(linkByRef);
+                    break;
+
                 default:
                     throw new NotImplementedException($"Unimplemented link type.");
             }
@@ -513,7 +523,7 @@ namespace FGraph
         {
             String System(String system) => system.LastUriPart();
 
-            GraphNode targetNode = new GraphNode(this, "CreateFhirPrimitiveNode", "FGrapher.CreateFhirPrimitiveNode", cssClass);
+            GraphNode targetNode = new GraphNode(this, "CreateFhirPrimitiveNode", "FGrapher.CreateFhirPrimitiveNode", cssClass, false);
             targetNode.LhsAnnotationText = $"{type} ";
 
             switch (fhirElement)
@@ -698,7 +708,7 @@ namespace FGraph
                     return;
                 }
 
-                GraphNode targetNode = new GraphNode(this, "ProcessNodeExtension", "FGrapher.ProcessNodeExtension", ExtensionNode_CssClass);
+                GraphNode targetNode = new GraphNode(this, "ProcessNodeExtension", "FGrapher.ProcessNodeExtension", ExtensionNode_CssClass, false);
                 targetNode.HRef = this.HRefStructDef(sourceNode.Anchor.Url.LastUriPart(), elementSnap.ElementId);
                 targetNode.DisplayName = extensionName;
                 targetNode.LhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
@@ -764,6 +774,55 @@ namespace FGraph
                 ProcessNode(sourceNode, link);
         }
 
+        void ProcessLink(GraphLinkByReference2 link)
+        {
+            const String fcn = "ProcessLink";
+
+            void LinkToProfile(GraphNode sourceNode,
+                ElementDefinition elementSnap,
+                ElementDefinition.TypeRefComponent typeRef)
+            {
+                sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
+
+                foreach (String targetRef in typeRef.Profile)
+                {
+                    GraphAnchor targetAnchor = new GraphAnchor(targetRef, null);
+                    GraphNode targetNode = GetTargetNode(targetAnchor);
+                    sourceNode.AddChild(link, link.Depth, targetNode);
+                    targetNode.AddParent(link, link.Depth, sourceNode);
+                    if (this.DebugFlag)
+                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
+                }
+            }
+
+
+            void ProcessNode(GraphNode sourceNode,
+                GraphLinkByReference2 link)
+            {
+                String linkElementId = link.Item;
+                if (this.DebugFlag)
+                    this.ConversionInfo(fcn, $"{sourceNode} -> {linkElementId}");
+                ElementDefinition elementDiff;
+                ElementDefinition elementSnap;
+                if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
+                    return;
+
+                foreach (ElementDefinition.TypeRefComponent typeRef in elementSnap.Type)
+                {
+                    if (typeRef.Profile.Count() > 0)
+                        LinkToProfile(sourceNode, elementSnap, typeRef);
+                    else
+                        throw new NotImplementedException();
+                }
+            }
+
+            if (this.DebugFlag)
+                this.ConversionInfo("LinkByReference", $"{link.Source} -> {link.Item}");
+            List<GraphNode> sources = FindNamedNodes(link.TraceMsg(), link.Source);
+            foreach (GraphNode sourceNode in sources)
+                ProcessNode(sourceNode, link);
+        }
+
         GraphNode GetTargetNode(GraphAnchor targetAnchor)
         {
             if (this.TryGetNodeByAnchor(targetAnchor, out GraphNode targetNode) == true)
@@ -771,7 +830,7 @@ namespace FGraph
 
             if (targetAnchor.Url.StartsWith("http://hl7.org/fhir"))
             {
-                targetNode = new GraphNode(this, "GetTargetNode", "FGrapher.getTargetNode", FhirResourceNode_CssClass)
+                targetNode = new GraphNode(this, "GetTargetNode", "FGrapher.getTargetNode", FhirResourceNode_CssClass, false)
                 {
                     NodeName = $"fhir/{targetAnchor.Url.LastUriPart()}",
                     DisplayName = $"{targetAnchor.Url.LastUriPart()}",
@@ -843,7 +902,7 @@ namespace FGraph
 
             if (elementDiff.Binding != null)
             {
-                GraphNode targetNode = new GraphNode(this, "ProcessLink", "FGrapher.ProcessNode", BindingNode_CssClass);
+                GraphNode targetNode = new GraphNode(this, "ProcessLink", "FGrapher.ProcessNode", BindingNode_CssClass, false);
                 targetNode.HRef = this.HRef(link.TraceMsg(), elementDiff.Binding.ValueSet);
                 targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
                 if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
@@ -880,7 +939,6 @@ namespace FGraph
         void ProcessLink(GraphLinkByBinding link)
         {
             //const String fcn = "ProcessLink";
-
 
             List<GraphNode> sources = FindNamedNodes(link.TraceMsg(), link.Source);
 

@@ -12,14 +12,17 @@ namespace FGraph
         protected FGrapher fGraph;
         protected String traceMsg;
         public String SourceFile;
+        public bool breakFlag;
 
         public GraphItem(FGrapher fGraph,
             String sourceFile,
-            String traceMsg)
+            String traceMsg,
+            bool breakFlag)
         {
             this.fGraph = fGraph;
             this.SourceFile = sourceFile;
             this.traceMsg = traceMsg;
+            this.breakFlag = breakFlag;
         }
 
         public virtual String TraceMsg() => this.traceMsg;

@@ -18,7 +18,11 @@ namespace FGraph
             return data.ToString();
         }
 
-        public GraphLink(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data.OptionalValue("traceMsg"))
+        public GraphLink(FGrapher fGraph, String sourceFile, JToken data) :
+            base(fGraph, 
+                sourceFile, 
+                data.OptionalValue("traceMsg"),
+                data.OptionalBoolValue("break"))
         {
             this.data = data;
             this.Key = data.OptionalValue("key");

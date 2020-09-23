@@ -82,14 +82,13 @@ namespace FGraph
                     keys);
                 seGroupFocus.AppendChildren(childNodes);
             }
+            // seGroupParents.Sort();
             e.Render(seGroupParents);
         }
 
         protected SENode CreateNodeBinding(ElementDefinition.ElementDefinitionBindingComponent binding)
         {
             String hRef = null;
-            //$if (linkFlag)
-            //$    hRef = this.HRef(mapNode);
             SENode node = new SENode
             {
                 HRef = hRef

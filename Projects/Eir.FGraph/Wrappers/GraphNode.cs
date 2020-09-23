@@ -89,14 +89,21 @@ namespace FGraph
         /// </summary>
         public String ElementId { get; set; }
 
-        public GraphNode(FGrapher fGraph, String sourceFile, String traceMsg, String cssClass) :
-            base(fGraph, sourceFile, traceMsg)
+        public GraphNode(FGrapher fGraph, String sourceFile, String traceMsg, String cssClass, bool breakFlag) :
+            base(fGraph, 
+                sourceFile, 
+                traceMsg,
+                breakFlag)
         {
             this.CssClass = cssClass;
         }
 
 
-        public GraphNode(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data.OptionalValue("traceMsg"))
+        public GraphNode(FGrapher fGraph, String sourceFile, JToken data) : 
+            base(fGraph, 
+                sourceFile, 
+                data.OptionalValue("traceMsg"),
+                data.OptionalBoolValue("break"))
         {
             this.NodeName = data.RequiredValue("nodeName");
             this.DisplayName = data.RequiredValue("displayName");

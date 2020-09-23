@@ -11,21 +11,19 @@ namespace FGraph
     {
         Int32 maxLhsAnnotation = -1;
         Int32 maxRhsAnnotation = -1;
-        List<SENode> nodes = new List<SENode>();
-        List<SENodeGroup> childGroups = new List<SENodeGroup>();
 
         public String Class { get; set; }
         public String Title { get; set; }
-        public IEnumerable<SENode> Nodes => this.nodes;
-        public IEnumerable<SENodeGroup> ChildGroups => this.childGroups;
+        public List<SENode> Nodes { get; set; } = new List<SENode>();
+        public List<SENodeGroup> ChildGroups { get; set; } = new List<SENodeGroup>();
         public Int32 MaxRhsAnnotation()
         {
             if (this.maxRhsAnnotation == -1)
             {
                 this.maxRhsAnnotation = 0;
-                if (this.nodes.Count > 0)
+                if (this.Nodes.Count > 0)
                 {
-                    foreach (SENode node in this.nodes)
+                    foreach (SENode node in this.Nodes)
                     {
                         if (
                             (node.RhsAnnotation != null) &&
@@ -52,9 +50,9 @@ namespace FGraph
             if (this.maxLhsAnnotation == -1)
             {
                 this.maxLhsAnnotation = 0;
-                if (this.nodes.Count > 0)
+                if (this.Nodes.Count > 0)
                 {
-                    foreach (SENode node in this.nodes)
+                    foreach (SENode node in this.Nodes)
                     {
                         if (
                             (node.LhsAnnotation != null) &&
@@ -88,15 +86,15 @@ namespace FGraph
         /// </summary>
         public void Sort()
         {
-            this.nodes.Sort((a, b) => a.AllText().CompareTo(b.AllText()));
-            this.childGroups.Sort((a, b) => a.Title.CompareTo(b.Title));
-            foreach (SENodeGroup child in this.childGroups)
+            this.Nodes.Sort((a, b) => a.AllText().CompareTo(b.AllText()));
+            this.ChildGroups.Sort((a, b) => a.Title.CompareTo(b.Title));
+            foreach (SENodeGroup child in this.ChildGroups)
                 child.Sort();
         }
 
         public void AppendNode(SENode node)
         {
-            this.nodes.Add(node);
+            this.Nodes.Add(node);
         }
 
         public void AppendNodes(IEnumerable<SENode> nodes)
@@ -107,18 +105,18 @@ namespace FGraph
 
         public void AppendChild(SENodeGroup nodeGroup)
         {
-            this.childGroups.Add(nodeGroup);
+            this.ChildGroups.Add(nodeGroup);
         }
 
         public void AppendChildren(IEnumerable<SENodeGroup> nodeGroups)
         {
-            this.childGroups.AddRange(nodeGroups);
+            this.ChildGroups.AddRange(nodeGroups);
         }
 
         public SENodeGroup AppendChild(String title)
         {
             SENodeGroup retVal = new SENodeGroup(title);
-            this.childGroups.Add(retVal);
+            this.ChildGroups.Add(retVal);
             return retVal;
         }
     }
