@@ -114,7 +114,7 @@ namespace FGraph
             return retVal;
         }
 
-        public void Render(SENodeGroup group)
+        public void Render(SENodeGroup group, IEnumerable<SENode> legendNodes)
         {
             this.minX = 0;
             this.minY = 0;
@@ -125,11 +125,36 @@ namespace FGraph
 
             this.RenderGroup(group, this.screenX, this.screenY, out float width, out float height,
                 endConnectors);
+            if (legendNodes != null)
+                RenderLegend(legendNodes, this.screenX, this.maxY + 10 * this.NodeGapY);
+
             float totalWidth = this.maxX - this.minX;
             float totalHeight = this.maxY - this.minY;
             this.root.Width = $"{this.ToPx(totalWidth + 2 * this.NodeGapX + this.BorderWidth + 1)}";
             this.root.Height = $"{this.ToPx(totalHeight + 2 * this.NodeGapY)}";
             this.screenY = this.maxY + 4 * this.BorderMargin;
+        }
+
+        void RenderLegend(IEnumerable<SENode> legendNodes, float x, float y)
+        {
+            SvgGroup legendGroup = this.doc.AddGroup(null);
+
+            foreach (SENode legendNode in legendNodes)
+            {
+                Render(legendGroup,
+                    legendNode,
+                    x,
+                    y,
+                    out float width,
+                    out float height);
+                x = x + width + this.NodeGapX;
+
+                float bottom = y + height;
+                if (this.maxX < x)
+                    this.maxX = x;
+                if (this.maxY < bottom)
+                    this.maxY = bottom;
+            }
         }
 
         void RenderGroup(SENodeGroup group,
