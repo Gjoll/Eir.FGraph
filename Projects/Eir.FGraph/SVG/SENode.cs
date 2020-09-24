@@ -10,7 +10,6 @@ namespace FGraph
     public class SENode
     {
         public List<SEText> TextLines = new List<SEText>();
-        public Color FillColor { get; set; } = Color.White;
         public String Class { get; set; }
 
         public float Width { get; set; } = 0;

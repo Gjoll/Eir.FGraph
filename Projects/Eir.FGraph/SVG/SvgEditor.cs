@@ -75,10 +75,8 @@ namespace FGraph
             arrowEnd.Id = ArrowEnd;
 
             SvgPolygon p = this.doc.AddPolygon(arrowEnd);
+            p.Class = "connector";
             p.Points = $"0 0 {this.ToPx(ArrowEndSize)} {this.ToPx(ArrowEndSize / 2)} 0 {this.ToPx(ArrowEndSize)}";
-            p.StrokeWidth = "0";
-            p.Fill = Color.Black;
-            p.StrokeWidth = "0";
         }
 
         void CreateArrowStart()
@@ -94,11 +92,10 @@ namespace FGraph
             arrowStart.Id = ArrowStart;
 
             SvgCircle c = this.doc.AddCircle(arrowStart);
+            c.Class = "connector";
             c.CX = $"{this.ToPx(radius)}";
             c.CY = $"{this.ToPx(radius)}";
             c.R = $"{this.ToPx(radius)}";
-            c.Fill = Color.Black;
-            c.StrokeWidth = "0";
         }
 
         public float NodeGapRhsX(SENodeGroup g)
@@ -392,15 +389,12 @@ namespace FGraph
             }
 
             square.Class = node.Class;
-            square.Stroke = Color.Black;
-            square.StrokeWidth = this.ToPx(this.BorderWidth);
             square.RX = this.ToPx(this.RectRx);
             square.RY = this.ToPx(this.RectRy);
             square.X = "0";
             square.Y = "0";
             square.Width = this.ToPx(width);
             square.Height = this.ToPx(height);
-            square.Fill = node.FillColor;
 
             float textX = this.BorderMargin;
             float textY = this.BorderMargin + 1;
@@ -465,12 +459,11 @@ namespace FGraph
             float yEnd)
         {
             SvgLine stub = this.doc.AddLine(g);
-            stub.Stroke = Color.Black;
+            stub.Class = "connector";
             stub.X1 = this.ToPx(xStart);
             stub.X2 = this.ToPx(xEnd);
             stub.Y1 = this.ToPx(yStart);
             stub.Y2 = this.ToPx(yEnd);
-            stub.StrokeWidth = this.ToPx(this.BorderWidth);
             if (startMarker)
                 stub.MarkerStart = $"url(#{ArrowStart})";
             if (endMarker)
@@ -480,12 +473,11 @@ namespace FGraph
         void CreateLine(SvgGroup g, float x1, float y1, float x2, float y2)
         {
             SvgLine stub = this.doc.AddLine(g);
-            stub.Stroke = Color.Black;
+            stub.Class = "connector";
             stub.X1 = this.ToPx(x1);
             stub.X2 = this.ToPx(x2);
             stub.Y1 = this.ToPx(y1);
             stub.Y2 = this.ToPx(y2);
-            stub.StrokeWidth = this.ToPx(this.BorderWidth);
         }
 
 
