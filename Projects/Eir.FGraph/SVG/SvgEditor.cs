@@ -38,7 +38,7 @@ namespace FGraph
 
         List<String> cssFiles = new List<string>();
 
-        String ToPx(float value) => $"{15 * value}";
+        String ToPx(float value) => $"{Math.Round(15 * value, 2)}";
 
         float screenX = -1;
         float screenY = -1;
