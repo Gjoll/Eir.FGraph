@@ -623,14 +623,13 @@ namespace FGraph
                 ElementDefinition.TypeRefComponent typeRef,
                 IEnumerable<String> profiles)
             {
-                sourceNode.RhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
-
                 foreach (String targetRef in profiles)
                 {
                     GraphAnchor targetAnchor = new GraphAnchor(targetRef, null);
                     GraphNode targetNode = GetTargetNode(targetAnchor);
                     sourceNode.AddChild(link, link.Depth, targetNode);
                     targetNode.AddParent(link, link.Depth, sourceNode);
+                    targetNode.LhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
                     if (this.DebugFlag)
                         this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
                 }
