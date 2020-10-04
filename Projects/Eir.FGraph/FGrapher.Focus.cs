@@ -268,7 +268,7 @@ namespace FGraph
             HashSet<GraphNode> childNodes = new HashSet<GraphNode>();
             childNodes.Add(focusNode);
 
-            bool HasKey(GraphNode.Link childLink) => (keys == null) || keys.Contains(childLink.Key);
+            bool HasKey(GraphNode.Link childLink) => (keys == null) || keys.Overlaps(childLink.Keys);
 
             foreach (GraphNode.Link childLink in focusNode.ChildLinks)
             {

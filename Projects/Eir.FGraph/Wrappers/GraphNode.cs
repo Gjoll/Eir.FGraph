@@ -18,17 +18,17 @@ namespace FGraph
             public GraphLink Traversal { get; }
             public GraphNode Node { get; }
             public Int32 Depth { get; }
-            public String Key { get; }
+            public HashSet<String> Keys { get; }
 
             public Link(GraphLink traversal,
                 GraphNode node,
                 Int32 depth,
-                String key)
+                String keys)
             {
                 this.Traversal = traversal;
                 this.Node = node;
                 this.Depth = depth;
-                this.Key = key;
+                this.Keys = new HashSet<String>(keys.Split(','));
             }
         }
 
