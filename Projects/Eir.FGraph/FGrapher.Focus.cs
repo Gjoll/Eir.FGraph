@@ -74,8 +74,8 @@ namespace FGraph
             SENodeGroup seGroupParents = new SENodeGroup("parents");
             SENodeGroup seGroupFocus = new SENodeGroup("focus");
             SENodeGroup seGroupChildren = new SENodeGroup("children");
-            seGroupParents.AppendChild(seGroupFocus);
-            seGroupFocus.AppendChild(seGroupChildren);
+            seGroupParents.AppendGroup(seGroupFocus);
+            seGroupFocus.AppendGroup(seGroupChildren);
 
             SENode focusSENode = this.CreateNode(focusGraphNode);
             focusSENode.Class = "focus";
@@ -85,7 +85,7 @@ namespace FGraph
                     focusSENode,
                     $"{traversalName}/*",
                     1);
-                seGroupParents.AppendNodes(parentNodes);
+                seGroupParents.AppendNodeRange(parentNodes);
             }
             {
                 IEnumerable<SENodeGroup> childNodes = TraverseChildren(focusGraphNode,
@@ -93,7 +93,7 @@ namespace FGraph
                     $"{traversalName}/*",
                     depth,
                     keys);
-                seGroupFocus.AppendChildren(childNodes);
+                seGroupFocus.AppendGroupRange(childNodes);
             }
             // seGroupParents.Sort();
             IEnumerable<SENode> legendNodes = CreateLegend(new Tuple<String, String>[]
@@ -284,7 +284,7 @@ namespace FGraph
                     SENodeGroup childContainer = new SENodeGroup(child.AllText());
                     childContainer.AppendNode(child);
 
-                    childContainer.AppendChildren(TraverseChildren(childLink.Node,
+                    childContainer.AppendGroupRange(TraverseChildren(childLink.Node,
                         child,
                         traversalFilter,
                         depth - childLink.Depth,

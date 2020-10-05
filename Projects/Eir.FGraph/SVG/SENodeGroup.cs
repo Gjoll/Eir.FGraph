@@ -92,32 +92,48 @@ namespace FGraph
                 child.Sort();
         }
 
+        public void MergeNode(SENode node)
+        {
+            this.Nodes.Add(node);
+        }
+
         public void AppendNode(SENode node)
         {
             this.Nodes.Add(node);
         }
 
-        public void AppendNodes(IEnumerable<SENode> nodes)
+        public void AppendNodeRange(IEnumerable<SENode> nodes)
         {
             foreach (SENode node in nodes)
                 this.AppendNode(node);
         }
 
-        public void AppendChild(SENodeGroup nodeGroup)
+        public void MergeNodeRange(IEnumerable<SENode> nodes)
+        {
+            foreach (SENode node in nodes)
+                this.MergeNode(node);
+        }
+
+        public void AppendGroup(SENodeGroup nodeGroup)
         {
             this.ChildGroups.Add(nodeGroup);
         }
 
-        public void AppendChildren(IEnumerable<SENodeGroup> nodeGroups)
+        public void MergeGroup(SENodeGroup nodeGroup)
         {
-            this.ChildGroups.AddRange(nodeGroups);
+            this.ChildGroups.Add(nodeGroup);
         }
 
-        public SENodeGroup AppendChild(String title)
+        public void AppendGroupRange(IEnumerable<SENodeGroup> nodeGroups)
         {
-            SENodeGroup retVal = new SENodeGroup(title);
-            this.ChildGroups.Add(retVal);
-            return retVal;
+            foreach (SENodeGroup nodeGroup in nodeGroups)
+                this.AppendGroup(nodeGroup);
+        }
+
+        public void MergeGroupRange(IEnumerable<SENodeGroup> nodeGroups)
+        {
+            foreach (SENodeGroup nodeGroup in nodeGroups)
+                this.MergeGroup(nodeGroup);
         }
     }
 }
