@@ -16,6 +16,8 @@ namespace FGraph
         public String Title { get; set; }
         public List<SENode> Nodes { get; set; } = new List<SENode>();
         public List<SENodeGroup> ChildGroups { get; set; } = new List<SENodeGroup>();
+        public Object Source { get; set; } = null;
+
         public Int32 MaxRhsAnnotation()
         {
             if (this.maxRhsAnnotation == -1)
@@ -74,11 +76,12 @@ namespace FGraph
             return this.maxLhsAnnotation;
         }
 
-        public SENodeGroup(String title)
+        public SENodeGroup(String title, Object source)
         {
             if (title == null)
                 throw new Exception("Title must be non empty for sorting");
             this.Title = title;
+            this.Source = source;
         }
 
         /// <summary>
@@ -94,6 +97,16 @@ namespace FGraph
 
         public void MergeNode(SENode node)
         {
+            foreach (SENode n in this.Nodes)
+            {
+                if (n.Source == node.Source)
+                {
+                    if (n.AllText() != node.AllText())
+                        throw new Exception($"Attempt to merge two nodes '{n.AllText()}' and '{node.AllText()}' with different text");
+                    return;
+                }
+            }
+
             this.Nodes.Add(node);
         }
 
@@ -121,6 +134,16 @@ namespace FGraph
 
         public void MergeGroup(SENodeGroup nodeGroup)
         {
+            foreach (SENodeGroup g in this.ChildGroups)
+            {
+                if (g.Source == nodeGroup.Source)
+                {
+                    g.MergeNodeRange(nodeGroup.Nodes);
+                    g.MergeGroupRange(nodeGroup.ChildGroups);
+                    return;
+                }
+            }
+
             this.ChildGroups.Add(nodeGroup);
         }
 

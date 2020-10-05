@@ -48,7 +48,7 @@ namespace FGraph
         {
             SENode CreateLegendNode(String cssClass, String text)
             {
-                SENode node = new SENode { Class = cssClass };
+                SENode node = new SENode(null) { Class = cssClass };
                 node.AddTextLine(text);
                 return node;
             }
@@ -71,9 +71,9 @@ namespace FGraph
             {
                 this.svgEditors.Add(e);
             }
-            SENodeGroup seGroupParents = new SENodeGroup("parents");
-            SENodeGroup seGroupFocus = new SENodeGroup("focus");
-            SENodeGroup seGroupChildren = new SENodeGroup("children");
+            SENodeGroup seGroupParents = new SENodeGroup("parents", null);
+            SENodeGroup seGroupFocus = new SENodeGroup("focus", null);
+            SENodeGroup seGroupChildren = new SENodeGroup("children", null);
             seGroupParents.AppendGroup(seGroupFocus);
             seGroupFocus.AppendGroup(seGroupChildren);
 
@@ -89,11 +89,10 @@ namespace FGraph
             }
             {
                 IEnumerable<SENodeGroup> childNodes = TraverseChildren(focusGraphNode,
-                    focusSENode,
                     $"{traversalName}/*",
                     depth,
-                    keys);
-                seGroupFocus.AppendGroupRange(childNodes);
+                    keys, new Stack<GraphNode>());
+                seGroupFocus.MergeGroupRange(childNodes);
             }
             // seGroupParents.Sort();
             IEnumerable<SENode> legendNodes = CreateLegend(new Tuple<String, String>[]
@@ -111,7 +110,7 @@ namespace FGraph
         protected SENode CreateNodeBinding(ElementDefinition.ElementDefinitionBindingComponent binding)
         {
             String hRef = null;
-            SENode node = new SENode
+            SENode node = new SENode(binding)
             {
                 HRef = hRef
             };
@@ -130,10 +129,9 @@ namespace FGraph
 
         protected SENode CreateNode(GraphNode graphNode)
         {
-            String hRef = graphNode.HRef;
-            SENode node = new SENode
+            SENode node = new SENode(graphNode)
             {
-                HRef = hRef
+                HRef = graphNode.HRef
             };
             node.Class = graphNode.CssClass;
 
@@ -143,12 +141,10 @@ namespace FGraph
             foreach (String titlePart in displayName.Split('/'))
             {
                 String s = titlePart.Trim();
-                node.AddTextLine(s, hRef);
+                node.AddTextLine(s, graphNode.HRef);
             }
-
             node.LhsAnnotation = ResolveAnnotation(graphNode, graphNode.LhsAnnotationText);
             node.RhsAnnotation = ResolveAnnotation(graphNode, graphNode.RhsAnnotationText);
-
             return node;
         }
 
@@ -258,15 +254,16 @@ namespace FGraph
         }
 
         IEnumerable<SENodeGroup> TraverseChildren(GraphNode focusNode,
-            SENode seFocusNode,
             String traversalFilter,
             Int32 depth,
-            HashSet<String> keys)
+            HashSet<String> keys,
+            Stack<GraphNode> nodeStack)
         {
-            Regex traversalFilterRex = new Regex(traversalFilter);
+            if (nodeStack.Contains(focusNode))
+                throw new Exception($"Circular linkage at {focusNode.TraceMsg()}");
+            nodeStack.Push(focusNode);
 
-            HashSet<GraphNode> childNodes = new HashSet<GraphNode>();
-            childNodes.Add(focusNode);
+            Regex traversalFilterRex = new Regex(traversalFilter);
 
             bool HasKey(GraphNode.Link childLink) => (keys == null) || keys.Overlaps(childLink.Keys);
 
@@ -275,23 +272,22 @@ namespace FGraph
                 if (
                     (depth > 0) &&
                     (traversalFilterRex.IsMatch(childLink.Traversal.TraversalName)) &&
-                    (childNodes.Contains(childLink.Node) == false) &&
                     (HasKey(childLink))
                 )
                 {
                     SENode child = CreateNode(childLink.Node);
 
-                    SENodeGroup childContainer = new SENodeGroup(child.AllText());
+                    SENodeGroup childContainer = new SENodeGroup(child.AllText(), childLink.Node);
                     childContainer.AppendNode(child);
 
-                    childContainer.AppendGroupRange(TraverseChildren(childLink.Node,
-                        child,
+                    childContainer.MergeGroupRange(TraverseChildren(childLink.Node,
                         traversalFilter,
                         depth - childLink.Depth,
-                        keys));
+                        keys, nodeStack));
                     yield return childContainer;
                 }
             }
+            nodeStack.Pop();
         }
     }
 }
