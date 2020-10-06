@@ -16,7 +16,6 @@ namespace FGraph
         public String Title { get; set; }
         public List<SENode> Nodes { get; set; } = new List<SENode>();
         public List<SENodeGroup> ChildGroups { get; set; } = new List<SENodeGroup>();
-        public Object Source { get; set; } = null;
 
         public Int32 MaxRhsAnnotation()
         {
@@ -76,12 +75,11 @@ namespace FGraph
             return this.maxLhsAnnotation;
         }
 
-        public SENodeGroup(String title, Object source)
+        public SENodeGroup(String title)
         {
             if (title == null)
                 throw new Exception("Title must be non empty for sorting");
             this.Title = title;
-            this.Source = source;
         }
 
         /// <summary>
@@ -95,21 +93,6 @@ namespace FGraph
                 child.Sort();
         }
 
-        public void MergeNode(SENode node)
-        {
-            foreach (SENode n in this.Nodes)
-            {
-                if (n.Source == node.Source)
-                {
-                    if (n.AllText() != node.AllText())
-                        throw new Exception($"Attempt to merge two nodes '{n.AllText()}' and '{node.AllText()}' with different text");
-                    return;
-                }
-            }
-
-            this.Nodes.Add(node);
-        }
-
         public void AppendNode(SENode node)
         {
             this.Nodes.Add(node);
@@ -121,29 +104,8 @@ namespace FGraph
                 this.AppendNode(node);
         }
 
-        public void MergeNodeRange(IEnumerable<SENode> nodes)
-        {
-            foreach (SENode node in nodes)
-                this.MergeNode(node);
-        }
-
         public void AppendGroup(SENodeGroup nodeGroup)
         {
-            this.ChildGroups.Add(nodeGroup);
-        }
-
-        public void MergeGroup(SENodeGroup nodeGroup)
-        {
-            foreach (SENodeGroup g in this.ChildGroups)
-            {
-                if (g.Source == nodeGroup.Source)
-                {
-                    g.MergeNodeRange(nodeGroup.Nodes);
-                    g.MergeGroupRange(nodeGroup.ChildGroups);
-                    return;
-                }
-            }
-
             this.ChildGroups.Add(nodeGroup);
         }
 
@@ -151,12 +113,6 @@ namespace FGraph
         {
             foreach (SENodeGroup nodeGroup in nodeGroups)
                 this.AppendGroup(nodeGroup);
-        }
-
-        public void MergeGroupRange(IEnumerable<SENodeGroup> nodeGroups)
-        {
-            foreach (SENodeGroup nodeGroup in nodeGroups)
-                this.MergeGroup(nodeGroup);
         }
     }
 }

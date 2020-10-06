@@ -9,7 +9,6 @@ namespace FGraph
     [DebuggerDisplay("{AllText()}/{LhsAnnotation}/{RhsAnnotation}")]
     public class SENode
     {
-        public Object Source { get; set; } = null;
         public List<SEText> TextLines = new List<SEText>();
         public String Class { get; set; }
 
@@ -27,11 +26,6 @@ namespace FGraph
         /// Annotation on the line leaving the node (at start of outgoing line);
         /// </summary>
         public String RhsAnnotation { get; set; }
-
-        public SENode(Object source)
-        {
-            this.Source = source;
-        }
 
         public String AllText()
         {

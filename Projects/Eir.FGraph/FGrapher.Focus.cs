@@ -48,7 +48,7 @@ namespace FGraph
         {
             SENode CreateLegendNode(String cssClass, String text)
             {
-                SENode node = new SENode(null) { Class = cssClass };
+                SENode node = new SENode { Class = cssClass };
                 node.AddTextLine(text);
                 return node;
             }
@@ -71,9 +71,9 @@ namespace FGraph
             {
                 this.svgEditors.Add(e);
             }
-            SENodeGroup seGroupParents = new SENodeGroup("parents", null);
-            SENodeGroup seGroupFocus = new SENodeGroup("focus", null);
-            SENodeGroup seGroupChildren = new SENodeGroup("children", null);
+            SENodeGroup seGroupParents = new SENodeGroup("parents");
+            SENodeGroup seGroupFocus = new SENodeGroup("focus");
+            SENodeGroup seGroupChildren = new SENodeGroup("children");
             seGroupParents.AppendGroup(seGroupFocus);
             seGroupFocus.AppendGroup(seGroupChildren);
 
@@ -92,7 +92,7 @@ namespace FGraph
                     $"{traversalName}/*",
                     depth,
                     keys, new Stack<GraphNode>());
-                seGroupFocus.MergeGroupRange(childNodes);
+                seGroupFocus.AppendGroupRange(childNodes);
             }
             // seGroupParents.Sort();
             IEnumerable<SENode> legendNodes = CreateLegend(new Tuple<String, String>[]
@@ -110,7 +110,7 @@ namespace FGraph
         protected SENode CreateNodeBinding(ElementDefinition.ElementDefinitionBindingComponent binding)
         {
             String hRef = null;
-            SENode node = new SENode(binding)
+            SENode node = new SENode()
             {
                 HRef = hRef
             };
@@ -129,7 +129,7 @@ namespace FGraph
 
         protected SENode CreateNode(GraphNode graphNode)
         {
-            SENode node = new SENode(graphNode)
+            SENode node = new SENode
             {
                 HRef = graphNode.HRef
             };
@@ -277,10 +277,10 @@ namespace FGraph
                 {
                     SENode child = CreateNode(childLink.Node);
 
-                    SENodeGroup childContainer = new SENodeGroup(child.AllText(), childLink.Node);
+                    SENodeGroup childContainer = new SENodeGroup(child.AllText());
                     childContainer.AppendNode(child);
 
-                    childContainer.MergeGroupRange(TraverseChildren(childLink.Node,
+                    childContainer.AppendGroupRange(TraverseChildren(childLink.Node,
                         traversalFilter,
                         depth - childLink.Depth,
                         keys, nodeStack));
