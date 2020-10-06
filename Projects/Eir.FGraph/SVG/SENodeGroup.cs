@@ -13,10 +13,12 @@ namespace FGraph
         Int32 maxRhsAnnotation = -1;
 
         public String Class { get; set; }
+        public String SortPrefix { get; set; } = "";
         public String Title { get; set; }
         public List<SENode> Nodes { get; set; } = new List<SENode>();
         public List<SENodeGroup> ChildGroups { get; set; } = new List<SENodeGroup>();
 
+        public String SortTitle => $"{this.SortPrefix}{this.Title}";
         public Int32 MaxRhsAnnotation()
         {
             if (this.maxRhsAnnotation == -1)
@@ -75,8 +77,9 @@ namespace FGraph
             return this.maxLhsAnnotation;
         }
 
-        public SENodeGroup(String title)
+        public SENodeGroup(String sortPrefix, String title)
         {
+            this.SortPrefix = sortPrefix;
             if (title == null)
                 throw new Exception("Title must be non empty for sorting");
             this.Title = title;
@@ -87,8 +90,8 @@ namespace FGraph
         /// </summary>
         public void Sort()
         {
-            this.Nodes.Sort((a, b) => a.AllText().CompareTo(b.AllText()));
-            this.ChildGroups.Sort((a, b) => a.Title.CompareTo(b.Title));
+            this.Nodes.Sort((a, b) => a.SortText.CompareTo(b.SortText));
+            this.ChildGroups.Sort((a, b) => a.SortTitle.CompareTo(b.SortTitle));
             foreach (SENodeGroup child in this.ChildGroups)
                 child.Sort();
         }

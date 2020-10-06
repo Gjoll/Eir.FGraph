@@ -55,6 +55,11 @@ namespace FGraph
         public String DisplayName { get; set; }
 
         /// <summary>
+        /// Prefix to change sort position of item.
+        /// </summary>
+        public String SortPrefix { get; set; }
+
+        /// <summary>
         /// css class to set svg element to.
         /// </summary>
         public String CssClass { get; set; }
@@ -107,6 +112,7 @@ namespace FGraph
         {
             this.NodeName = data.RequiredValue("nodeName");
             this.DisplayName = data.RequiredValue("displayName");
+            this.SortPrefix = data.OptionalValue("sortPrefix");
             this.CssClass = data.OptionalValue("cssClass");
             this.LhsAnnotationText = data.OptionalValue("lhsAnnotationText");
             this.RhsAnnotationText = data.OptionalValue("rhsAnnotationText");

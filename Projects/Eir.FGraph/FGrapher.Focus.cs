@@ -71,9 +71,9 @@ namespace FGraph
             {
                 this.svgEditors.Add(e);
             }
-            SENodeGroup seGroupParents = new SENodeGroup("parents");
-            SENodeGroup seGroupFocus = new SENodeGroup("focus");
-            SENodeGroup seGroupChildren = new SENodeGroup("children");
+            SENodeGroup seGroupParents = new SENodeGroup("", "parents");
+            SENodeGroup seGroupFocus = new SENodeGroup("", "focus");
+            SENodeGroup seGroupChildren = new SENodeGroup("", "children");
             seGroupParents.AppendGroup(seGroupFocus);
             seGroupFocus.AppendGroup(seGroupChildren);
 
@@ -94,7 +94,7 @@ namespace FGraph
                     keys, new Stack<GraphNode>());
                 seGroupFocus.AppendGroupRange(childNodes);
             }
-            // seGroupParents.Sort();
+            seGroupParents.Sort();
             IEnumerable<SENode> legendNodes = CreateLegend(new Tuple<String, String>[]
             {
                     new Tuple<String, String>("focus", "Focus"),
@@ -143,6 +143,8 @@ namespace FGraph
                 String s = titlePart.Trim();
                 node.AddTextLine(s, graphNode.HRef);
             }
+
+            node.SortPrefix = graphNode.SortPrefix;
             node.LhsAnnotation = ResolveAnnotation(graphNode, graphNode.LhsAnnotationText);
             node.RhsAnnotation = ResolveAnnotation(graphNode, graphNode.RhsAnnotationText);
             return node;
@@ -277,7 +279,7 @@ namespace FGraph
                 {
                     SENode child = CreateNode(childLink.Node);
 
-                    SENodeGroup childContainer = new SENodeGroup(child.AllText());
+                    SENodeGroup childContainer = new SENodeGroup(child.SortPrefix, child.AllText());
                     childContainer.AppendNode(child);
 
                     childContainer.AppendGroupRange(TraverseChildren(childLink.Node,
