@@ -42,6 +42,7 @@ namespace FGraph
         }
         private string outputDir;
 
+        ConcurrentDictionary<String, List<GraphLegend>> legends= new ConcurrentDictionary<String, List<GraphLegend>>();
         ConcurrentDictionary<String, DomainResource> resources = new ConcurrentDictionary<String, DomainResource>();
         ConcurrentDictionary<String, GraphNode> graphNodesByName = new ConcurrentDictionary<string, GraphNode>();
         ConcurrentDictionary<GraphAnchor, GraphNode> graphNodesByAnchor = new ConcurrentDictionary<GraphAnchor, GraphNode>();
@@ -312,6 +313,18 @@ namespace FGraph
         {
             switch (type)
             {
+                case "legend":
+                    {
+                        GraphLegend node = new GraphLegend(this, sourceFile, value);
+                        if (this.legends.TryGetValue(node.LegendName, out List<GraphLegend> itemList) == false)
+                        {
+                            itemList = new List<GraphLegend>();
+                            this.legends.TryAdd(node.LegendName, itemList);
+                        }
+                        itemList.Add(node);
+                    }
+                    break;
+
                 case "node":
                     {
                         GraphNode node = new GraphNode(this, sourceFile, value);
@@ -708,6 +721,7 @@ namespace FGraph
             if (this.DebugFlag)
                 this.ConversionInfo("LinkByName", $"{link.Source} -> {link.Target}");
 
+            //Debug.Assert(link.Source != "^BreastRadiologyReport/$");
             foreach (GraphNode sourceNode in sources)
             {
                 foreach (GraphNode targetNode in targets)

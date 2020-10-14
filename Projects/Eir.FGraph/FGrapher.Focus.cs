@@ -44,19 +44,6 @@ namespace FGraph
             RenderFocusGraph(cssFile, focusGraphNode, depth, traversalName, graphName, keysHash);
         }
 
-        IEnumerable<SENode> CreateLegend(IEnumerable<Tuple<String, String>> items)
-        {
-            SENode CreateLegendNode(String cssClass, String text)
-            {
-                SENode node = new SENode { Class = cssClass };
-                node.AddTextLine(text);
-                return node;
-            }
-
-            foreach (Tuple<String, String> item in items)
-                yield return CreateLegendNode(item.Item1, item.Item2);
-        }
-
         public void RenderFocusGraph(String cssFile,
             GraphNode focusGraphNode,
             Int32 depth,
@@ -95,15 +82,7 @@ namespace FGraph
                 seGroupFocus.AppendGroupRange(childNodes);
             }
             seGroupParents.Sort();
-            IEnumerable<SENode> legendNodes = CreateLegend(new Tuple<String, String>[]
-            {
-                    new Tuple<String, String>("focus", "Focus"),
-                    new Tuple<String, String>("profile", "Profiled Resource"),
-                    new Tuple<String, String>("extension", "Extension"),
-                    new Tuple<String, String>("fhir", "Base Resource"),
-                    new Tuple<String, String>("element", "Resource Element"),
-                    new Tuple<String, String>("valueSet", "ValueSet"),
-            });
+            this.legends.TryGetValue("focus", out List<GraphLegend> legendNodes);
             e.Render(seGroupParents, legendNodes);
         }
 

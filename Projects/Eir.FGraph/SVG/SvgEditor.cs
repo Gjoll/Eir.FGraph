@@ -114,7 +114,7 @@ namespace FGraph
             return retVal;
         }
 
-        public void Render(SENodeGroup group, IEnumerable<SENode> legendNodes)
+        public void Render(SENodeGroup group, IEnumerable<GraphLegend> legendNodes)
         {
             this.minX = 0;
             this.minY = 0;
@@ -123,10 +123,17 @@ namespace FGraph
 
             List<EndPoint> endConnectors = new List<EndPoint>();
 
-            this.RenderGroup(group, this.screenX, this.screenY, out float width, out float height,
-                endConnectors);
+            HashSet<String> cssClasses = new HashSet<string>();
+
+            this.RenderGroup(group,
+                this.screenX,
+                this.screenY,
+                endConnectors,
+                cssClasses,
+                out float width,
+                out float height);
             if (legendNodes != null)
-                RenderLegend(legendNodes, this.screenX, this.maxY + 10 * this.NodeGapY);
+                RenderLegend(legendNodes, cssClasses, this.screenX, this.maxY + 10 * this.NodeGapY);
 
             float totalWidth = this.maxX - this.minX;
             float totalHeight = this.maxY - this.minY;
@@ -135,34 +142,51 @@ namespace FGraph
             this.screenY = this.maxY + 4 * this.BorderMargin;
         }
 
-        void RenderLegend(IEnumerable<SENode> legendNodes, float x, float y)
+        void RenderLegend(IEnumerable<GraphLegend> legend,
+            HashSet<String> cssClasses,
+            float x,
+            float y)
         {
             SvgGroup legendGroup = this.doc.AddGroup(null);
 
-            foreach (SENode legendNode in legendNodes)
+            foreach (GraphLegend legendItem in legend)
             {
-                Render(legendGroup,
-                    legendNode,
-                    x,
-                    y,
-                    out float width,
-                    out float height);
-                x = x + width + this.NodeGapX;
+                bool CssClassUsed() => cssClasses.Contains(legendItem.CssClass);
 
-                float bottom = y + height;
-                if (this.maxX < x)
-                    this.maxX = x;
-                if (this.maxY < bottom)
-                    this.maxY = bottom;
+                void RenderLegendItem()
+                {
+                    SENode node = new SENode { Class = legendItem.CssClass };
+                    node.AddTextLine(legendItem.Item);
+
+                    Render(legendGroup,
+                        node,
+                        x,
+                        y,
+                        null,
+                        out float width,
+                        out float height);
+                    x = x + width + this.NodeGapX;
+                    float bottom = y + height;
+                    if (this.maxX < x)
+                        this.maxX = x;
+                    if (this.maxY < bottom)
+                        this.maxY = bottom;
+                }
+
+                if (CssClassUsed())
+                {
+                    RenderLegendItem();
+                }
             }
         }
 
         void RenderGroup(SENodeGroup group,
             float screenX,
             float screenY,
+            List<EndPoint> endConnectors,
+            HashSet<String> cssClasses,
             out float colWidth,
-            out float colHeight,
-            List<EndPoint> endConnectors)
+            out float colHeight)
         {
             colWidth = 0;
             colHeight = 0;
@@ -170,13 +194,24 @@ namespace FGraph
             // Some groups just contain sub groups (no nodes). Make each group children of this groups parent.
 
             if (group.Nodes.Count() > 0)
-                this.RenderSimpleGroup(group, screenX, screenY, out colWidth, out colHeight, endConnectors);
+                this.RenderSimpleGroup(group,
+                    screenX,
+                    screenY,
+                    endConnectors,
+                    cssClasses,
+                    out colWidth,
+                    out colHeight);
             else if (group.ChildGroups.Count() > 0)
             {
                 foreach (SENodeGroup childGroup in group.ChildGroups)
                 {
-                    this.RenderGroup(childGroup, screenX, screenY, out float tColWidth, out float tColHeight,
-                        endConnectors);
+                    this.RenderGroup(childGroup,
+                        screenX,
+                        screenY,
+                        endConnectors,
+                        cssClasses,
+                        out float tColWidth,
+                        out float tColHeight);
                     colHeight += tColHeight;
                     screenY += tColHeight;
                     if (colWidth < tColWidth)
@@ -188,9 +223,10 @@ namespace FGraph
         void RenderSimpleGroup(SENodeGroup group,
             float screenX,
             float screenY,
+            List<EndPoint> endConnectors,
+            HashSet<String> cssClasses,
             out float colWidth,
-            out float colHeight,
-            List<EndPoint> endConnectors)
+            out float colHeight)
         {
             colWidth = 0;
             colHeight = 0;
@@ -209,7 +245,13 @@ namespace FGraph
 
             foreach (SENode node in group.Nodes)
             {
-                this.Render(childGroup, node, screenX, col1ScreenY, out float nodeWidth, out float nodeHeight);
+                this.Render(childGroup,
+                    node,
+                    screenX,
+                    col1ScreenY,
+                    cssClasses,
+                    out float nodeWidth,
+                    out float nodeHeight);
                 if (col1Width < nodeWidth)
                     col1Width = nodeWidth;
 
@@ -245,9 +287,10 @@ namespace FGraph
                 col1Width,
                 topConnectorY,
                 bottomConnectorY,
+                startConnectors,
+                cssClasses,
                 out colWidth,
-                out colHeight,
-                startConnectors);
+                out colHeight);
 
 
             if (colHeight < col1Height)
@@ -262,9 +305,10 @@ namespace FGraph
             float col1Width,
             float topConnectorY,
             float bottomConnectorY,
+            List<EndPoint> startConnectors,
+            HashSet<String> cssClasses,
             out float colWidth,
-            out float colHeight,
-            List<EndPoint> startConnectors)
+            out float colHeight)
         {
             colWidth = 0;
             colHeight = 0;
@@ -283,9 +327,10 @@ namespace FGraph
                 this.RenderGroup(child,
                     col2ScreenX,
                     col2ScreenY,
+                    col2EndConnectors,
+                    cssClasses,
                     out float col2GroupWidth,
-                    out float col2GroupHeight,
-                    col2EndConnectors);
+                    out float col2GroupHeight);
                 col2ScreenY += col2GroupHeight;
                 col2Height += col2GroupHeight;
 
@@ -387,15 +432,24 @@ namespace FGraph
             SENode node,
             float screenX,
             float screenY,
+            HashSet<String> cssClasses,
             out float width,
             out float height)
         {
             const float CharMod = 0.7f;
 
+            void AddClass(String cssClassx)
+            {
+                if (cssClasses == null) return;
+                if (cssClasses.Contains(cssClassx) == false)
+                    cssClasses.Add(cssClassx);
+            }
+
             //Debug.Assert((this.RenderTestPoint == null) || node.AllText().Contains(RenderTestPoint) == false);
             height = node.TextLines.Count * this.LineHeight + 2 * this.BorderMargin;
             width = node.Width * CharMod + 2 * this.BorderMargin;
 
+            AddClass(parentGroup.Class);
             SvgGroup g = this.doc.AddGroup(parentGroup);
             g.Class = parentGroup.Class;
             g.Transform = $"translate({this.ToPx(screenX)} {this.ToPx(screenY)})";
@@ -413,6 +467,7 @@ namespace FGraph
                 square = this.doc.AddRect(g);
             }
 
+            AddClass(node.Class);
             square.Class = node.Class;
             square.RX = this.ToPx(this.RectRx);
             square.RY = this.ToPx(this.RectRy);
@@ -421,7 +476,6 @@ namespace FGraph
             square.Width = this.ToPx(width);
             square.Height = this.ToPx(height);
 
-            float textX = this.BorderMargin;
             float textY = this.BorderMargin + 1;
 
             foreach (SEText line in node.TextLines)
@@ -445,6 +499,7 @@ namespace FGraph
                     t = this.doc.AddText(g);
                 }
                 t.Class = GetClass(line.Class, node.Class);
+                AddClass(t.Class);
 
                 t.X = this.ToPx(width / 2);
                 t.Y = this.ToPx(textY);
