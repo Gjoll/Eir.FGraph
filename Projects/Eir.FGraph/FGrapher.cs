@@ -790,7 +790,6 @@ namespace FGraph
                 {
                     targetNode.DisplayName = vs.Name;
                 }
-                targetNode.DisplayName += "/ValueSet";
                 targetNode.LhsAnnotationText = "bind";
                 sourceNode.AddChild(link, 0, targetNode);
                 targetNode.AddParent(link, 0, sourceNode);
