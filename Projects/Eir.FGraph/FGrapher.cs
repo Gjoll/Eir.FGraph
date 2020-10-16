@@ -500,6 +500,7 @@ namespace FGraph
         List<GraphNode> FindNamedNodes(String sourceFile, String name)
         {
             List<GraphNode> retVal = new List<GraphNode>();
+            name = name.Replace("[x]", @"\[x\]");
             Regex r = new Regex(name);
             foreach (GraphNode graphNode in this.graphNodesByName.Values)
             {
