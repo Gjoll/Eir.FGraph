@@ -42,7 +42,7 @@ namespace FGraph
         }
         private string outputDir;
 
-        ConcurrentDictionary<String, List<GraphLegend>> legends= new ConcurrentDictionary<String, List<GraphLegend>>();
+        ConcurrentDictionary<String, List<GraphLegend>> legends = new ConcurrentDictionary<String, List<GraphLegend>>();
         ConcurrentDictionary<String, DomainResource> resources = new ConcurrentDictionary<String, DomainResource>();
         ConcurrentDictionary<String, GraphNode> graphNodesByName = new ConcurrentDictionary<string, GraphNode>();
         ConcurrentDictionary<GraphAnchor, GraphNode> graphNodesByAnchor = new ConcurrentDictionary<GraphAnchor, GraphNode>();
@@ -476,6 +476,27 @@ namespace FGraph
             }
         }
 
+        void ShowCloseMatches(String sourceFile,
+            String fcn,
+            String name,
+            IEnumerable<GraphNode> nodes)
+        {
+            if (name.StartsWith('^') == false)
+                return;
+            name = name.Substring(1);
+            Int32 index = name.IndexOfAny(new char[] { '.', '[', '/' });
+            if (index > 0)
+                name = name.Substring(0, index);
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Close matches");
+
+            foreach (GraphNode node in nodes)
+                if (node.NodeName.StartsWith(name))
+                    sb.AppendLine($"  {node.NodeName}");
+            this.ParseItemWarn(sourceFile, fcn, sb.ToString());
+        }
+
         List<GraphNode> FindNamedNodes(String sourceFile, String name)
         {
             List<GraphNode> retVal = new List<GraphNode>();
@@ -490,6 +511,11 @@ namespace FGraph
                 this.ParseItemWarn(sourceFile,
                     "FindNamedNodes",
                     $"No nodes named '{name}' found");
+
+                ShowCloseMatches(sourceFile,
+                    "FindNamedNodes",
+                    name,
+                    this.graphNodesByName.Values);
             }
 
             return retVal;
