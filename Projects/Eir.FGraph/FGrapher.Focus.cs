@@ -101,7 +101,6 @@ namespace FGraph
                 displayName = vs.Name;
             }
             node.AddTextLine(displayName, hRef);
-            node.AddTextLine("ValueSet", hRef);
             node.LhsAnnotation = "bind";
             return node;
         }
