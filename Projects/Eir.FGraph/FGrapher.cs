@@ -330,12 +330,12 @@ namespace FGraph
                         GraphNode node = new GraphNode(this, sourceFile, value);
                         this.SetAnchor(node);
                         if (this.graphNodesByName.TryAdd(node.NodeName, node) == false)
-                            throw new Exception($"Error adding item to graphNodesByAnchor");
+                            throw new Exception($"Error adding node {node.NodeName} to graphNodesByAnchor");
 
                         if (node.Anchor != null)
                         {
                             if (this.graphNodesByAnchor.TryAdd(node.Anchor, node) == false)
-                                throw new Exception($"Error adding item to graphNodesByAnchor");
+                                throw new Exception($"Error adding node {node.NodeName} to graphNodesByAnchor");
                         }
                     }
                     break;
@@ -719,12 +719,12 @@ namespace FGraph
                     HRef = targetAnchor.Url
                 };
                 if (this.graphNodesByName.TryAdd(targetNode.NodeName, targetNode) == false)
-                    throw new Exception($"Error adding item to graphNodesByAnchor");
+                    throw new Exception($"Error adding node {targetNode.NodeName} to graphNodesByAnchor");
 
                 if (targetNode.Anchor != null)
                 {
                     if (this.graphNodesByAnchor.TryAdd(targetNode.Anchor, targetNode) == false)
-                        throw new Exception($"Error adding item to graphNodesByAnchor");
+                        throw new Exception($"Error adding node {targetNode.NodeName} to graphNodesByAnchor");
                 }
                 return targetNode;
             }
