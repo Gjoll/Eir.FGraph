@@ -129,7 +129,7 @@ namespace FGraph
                 LoadResourceFile(path);
             else
             {
-                this.ParseItemError(path, fcn, $"{path} not found");
+                this.ParseItemError(path, fcn, $"{Path.GetFullPath(path)} not found");
             }
         }
 
@@ -167,6 +167,8 @@ namespace FGraph
         async Task DoLoadResourceFile(String path)
         {
             DomainResource domainResource;
+            if (File.Exists(path) == false)
+                throw new Exception($"Resource File '{Path.GetFullPath(path)}' does not exist");
             String text = await File.ReadAllTextAsync(path);
             switch (Path.GetExtension(path).ToUpper(CultureInfo.InvariantCulture))
             {
@@ -406,7 +408,7 @@ namespace FGraph
                 LoadFile(path);
             else
             {
-                this.ParseItemError(path, "Load", $"{path} not found");
+                this.ParseItemError(path, "Load", $"{Path.GetFullPath(path)} not found");
             }
         }
 
