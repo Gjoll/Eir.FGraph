@@ -147,7 +147,9 @@ namespace FGraph
                     (!Exists(Path.GetFullPath("."), ref cssFile)) &&
                     (!Exists(this.inputDir, ref cssFile))
                 )
-                    throw new Exception($"Css file '{cssFile}' not found");
+                {
+                    throw new Exception($"Css file '{cssFile}' not found in '{Path.GetFullPath(".")}' or '{Path.GetFullPath(this.inputDir)}'");
+                }
 
                 switch (rendering.name.ToLower())
                 {

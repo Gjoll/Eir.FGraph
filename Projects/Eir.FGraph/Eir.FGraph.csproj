@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>FGraph</ToolCommandName>
-    <Version>2.18.19</Version>
+    <Version>2.18.20</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Gjoll/Eir.FGraph</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -15,8 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eir.FhirKhit.R4" Version="1.9.7" />
-    <PackageReference Include="Hl7.Fhir.Specification.R4" Version="2.0.0-beta1" />
+    <PackageReference Include="Eir.FhirKhit.R4" Version="1.9.14" />
+    <PackageReference Include="Hl7.Fhir.Specification.R4" Version="2.0.3" />
   </ItemGroup>
 
   <ItemGroup>
