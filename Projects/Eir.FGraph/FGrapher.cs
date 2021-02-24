@@ -174,14 +174,22 @@ namespace FGraph
             {
                 case ".XML":
                     {
-                        FhirXmlParser parser = new FhirXmlParser();
+                        FhirXmlParser parser = new FhirXmlParser(new ParserSettings
+                        {
+                            AcceptUnknownMembers = true,
+                            AllowUnrecognizedEnums = true
+                        });
                         domainResource = parser.Parse<DomainResource>(text);
                         break;
                     }
 
                 case ".JSON":
                     {
-                        FhirJsonParser parser = new FhirJsonParser();
+                        FhirJsonParser parser = new FhirJsonParser(new ParserSettings
+                        {
+                            AcceptUnknownMembers = true,
+                            AllowUnrecognizedEnums = true
+                        });
                         domainResource = parser.Parse<DomainResource>(text);
                         break;
                     }
@@ -215,6 +223,9 @@ namespace FGraph
                 case CodeSystem codeSystem:
                     resourceUrl = codeSystem.Url;
                     break;
+
+                default:
+                    return;
             }
 
             if (this.resources.TryAdd(resourceUrl, domainResource) == false)
