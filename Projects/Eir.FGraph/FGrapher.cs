@@ -21,6 +21,7 @@ namespace FGraph
 {
     public partial class FGrapher : ConverterBase
     {
+        const String fcn = "Load";
         public String FhirResourceNode_CssClass = "fhir";
         public String BindingNode_CssClass = "valueSet";
         public String ExtensionNode_CssClass = "value";
@@ -343,12 +344,22 @@ namespace FGraph
                         GraphNode node = new GraphNode(this, sourceFile, value);
                         this.SetAnchor(node);
                         if (this.graphNodesByName.TryAdd(node.NodeName, node) == false)
-                            throw new Exception($"Error adding node {node.NodeName} to graphNodesByAnchor");
+                        {
+                            this.ParseItemError(sourceFile, 
+                                fcn,
+                                $"Error adding node {node.NodeName} to graphNodesByAnchor. Item already exists?");
+                            return;
+                        }
 
                         if (node.Anchor != null)
                         {
                             if (this.graphNodesByAnchor.TryAdd(node.Anchor, node) == false)
-                                throw new Exception($"Error adding node {node.NodeName} to graphNodesByAnchor");
+                            {
+                                this.ParseItemError(sourceFile,
+                                    fcn,
+                                    $"Error adding node {node.NodeName} to graphNodesByAnchor");
+                                return;
+                            }
                         }
                     }
                     break;
@@ -359,19 +370,19 @@ namespace FGraph
                         String traversalName = value?["traversalName"]?.Value<String>();
                         if (String.IsNullOrEmpty(nodeName))
                         {
-                            this.ParseItemError(sourceFile, "Load", $"graph command missing required nodeName");
+                            this.ParseItemError(sourceFile, fcn, $"graph command missing required nodeName");
                             return;
                         }
 
                         if (String.IsNullOrEmpty(traversalName))
                         {
-                            this.ParseItemError(sourceFile, "Load", $"graph command missing required traversalName");
+                            this.ParseItemError(sourceFile, fcn, $"graph command missing required traversalName");
                             return;
                         }
 
                         if (this.TryGetNodeByName(nodeName, out GraphNode node) == false)
                         {
-                            this.ParseItemError(sourceFile, "Load", $"unknown node '{nodeName}' in graph command");
+                            this.ParseItemError(sourceFile, fcn, $"unknown node '{nodeName}' in graph command");
                             return;
                         }
                         if (node.Traversals.Contains(traversalName) == false)
@@ -406,7 +417,7 @@ namespace FGraph
                     break;
 
                 default:
-                    this.ParseItemError(sourceFile, "Load", $"unknown graph item '{type}'");
+                    this.ParseItemError(sourceFile, fcn, $"unknown graph item '{type}'");
                     return;
             }
         }
@@ -419,7 +430,7 @@ namespace FGraph
                 LoadFile(path);
             else
             {
-                this.ParseItemError(path, "Load", $"{Path.GetFullPath(path)} not found");
+                this.ParseItemError(path, fcn, $"{Path.GetFullPath(path)} not found");
             }
         }
 
