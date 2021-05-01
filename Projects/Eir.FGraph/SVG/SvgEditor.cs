@@ -1,11 +1,11 @@
-﻿using SVGLib;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using SVGLib;
 
 namespace FGraph
 {
@@ -30,7 +30,7 @@ namespace FGraph
         //public String RenderTestPoint;
         public float BorderWidth { get; set; } = 0.125f;
         public float LineHeight { get; set; } = 1.25f;
-        public float BorderMargin { get; set; } = 0.5f;
+        public float BorderMargin { get; set; } = 0.25f;
         public float NodeGapY { get; set; } = 0.5f;
         public float NodeGapX { get; set; } = 0.5f;
         public float RectRx { get; set; } = 0.25f;
@@ -436,8 +436,6 @@ namespace FGraph
             out float width,
             out float height)
         {
-            const float CharMod = 0.7f;
-
             void AddClass(String cssClassx)
             {
                 if (cssClasses == null) return;
@@ -447,7 +445,7 @@ namespace FGraph
 
             //Debug.Assert((this.RenderTestPoint == null) || node.AllText().Contains(RenderTestPoint) == false);
             height = node.TextLines.Count * this.LineHeight + 2 * this.BorderMargin;
-            width = node.Width * CharMod + 2 * this.BorderMargin;
+            width = node.Width / 15 + 2 * this.BorderMargin;
 
             AddClass(parentGroup.Class);
             SvgGroup g = this.doc.AddGroup(parentGroup);
@@ -501,9 +499,9 @@ namespace FGraph
                 t.Class = GetClass(line.Class, node.Class);
                 AddClass(t.Class);
 
-                t.X = this.ToPx(width / 2);
+                t.X = this.ToPx(this.BorderMargin + this.BorderWidth);
                 t.Y = this.ToPx(textY);
-                t.TextAnchor = "middle";
+                t.TextAnchor = "left";
                 t.Value = line.Text;
 
                 textY += this.LineHeight;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 
 namespace FGraph
@@ -20,6 +21,16 @@ namespace FGraph
 
         public SEText()
         {
+        }
+
+        public float GetWidthOfString()
+        {
+            using Bitmap objBitmap = new Bitmap(200, 100);
+            using Graphics objGraphics = Graphics.FromImage(objBitmap);
+            SizeF stringSize = objGraphics.MeasureString(this.Text, new Font("Arial", 12));
+            objBitmap.Dispose();
+            objGraphics.Dispose();
+            return stringSize.Width;
         }
     }
 }

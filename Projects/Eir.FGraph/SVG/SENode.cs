@@ -44,8 +44,9 @@ namespace FGraph
 
         public SENode AddTextLine(SEText text)
         {
-            if (this.Width < text.Text.Length)
-                this.Width = text.Text.Length;
+            float width = text.GetWidthOfString();
+            if (this.Width < width)
+                this.Width = width;
             this.TextLines.Add(text);
             return this;
         }
