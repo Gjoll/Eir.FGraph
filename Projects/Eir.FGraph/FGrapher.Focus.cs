@@ -218,7 +218,7 @@ namespace FGraph
                         {
                             case 0:
                                 this.ParseItemError(parentNode.TraceMsg(), fcn, $"No parent nodes found");
-                                break;
+                                yield break;
                             case 1:
                                 parentNode = parentNode.ParentLinks[0].Node;
                                 break;
