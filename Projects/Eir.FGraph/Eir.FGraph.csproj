@@ -12,8 +12,6 @@
     <RepositoryType></RepositoryType>
     <RepositoryUrl>https://github.com/Gjoll/Eir.FGraph</RepositoryUrl>
     <PackageTags>sNodes</PackageTags>
-    <AssemblyVersion>2.18.25.0</AssemblyVersion>
-    <FileVersion>2.18.25.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
