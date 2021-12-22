@@ -5,15 +5,15 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>FGraph</ToolCommandName>
-    <Version>2.18.24</Version>
+    <Version>2.18.25</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Gjoll/Eir.FGraph</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryType></RepositoryType>
     <RepositoryUrl>https://github.com/Gjoll/Eir.FGraph</RepositoryUrl>
     <PackageTags>sNodes</PackageTags>
-    <AssemblyVersion>2.18.24.0</AssemblyVersion>
-    <FileVersion>2.18.24.0</FileVersion>
+    <AssemblyVersion>2.18.25.0</AssemblyVersion>
+    <FileVersion>2.18.25.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

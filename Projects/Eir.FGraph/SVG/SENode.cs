@@ -15,7 +15,16 @@ namespace FGraph
 
         public float Width { get; set; } = 0;
 
-        public String HRef { get; set; }
+        public String HRef
+        {
+            get => this.hRef;
+            set
+            {
+                //Debug.Assert(value != "http://hl7.org/fhir/us/breast-radiology/CodeSystem/ObservationCodesCS");
+                this.hRef = value;
+            }
+        }
+        String hRef;
 
 
         /// <summary>

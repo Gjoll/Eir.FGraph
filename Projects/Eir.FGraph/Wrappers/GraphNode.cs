@@ -40,7 +40,16 @@ namespace FGraph
         /// <summary>
         /// HRef.
         /// </summary>
-        public String HRef { get; set; }
+        public String HRef
+        {
+            get => this.hRef;
+            set
+            {
+                //Debug.Assert(value != "http://hl7.org/fhir/us/breast-radiology/CodeSystem/ObservationCodesCS");
+                this.hRef = value;
+            }
+        }
+        String hRef;
 
         /// <summary>
         /// Optional value of what we linkt his node to. Link can be to

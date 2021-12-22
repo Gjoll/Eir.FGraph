@@ -440,7 +440,7 @@ namespace FGraph
         }
 
 
-        protected String HRef(String sourceFile, String url, String item = null)
+        protected String HRef(String sourceFile, String url, String item = null, bool warnFlag = true)
         {
             const String fcn = "HRef";
 
@@ -449,8 +449,10 @@ namespace FGraph
 
             if (url.StartsWith(this.BaseUrl) == false)
             {
+                if (warnFlag == false)
+                    return String.Empty;
                 this.ParseItemWarn(sourceFile, fcn, $"Url '{url}' base is not fhir and is not {this.BaseUrl}");
-                return "";
+                return String.Empty;
             }
 
             String nonBasePart = url.Substring(this.BaseUrl.Length);
@@ -570,7 +572,8 @@ namespace FGraph
             }
         }
 
-        GraphNode CreateFhirPrimitiveNode(String type,
+        GraphNode CreateFhirPrimitiveNode(String sourceFile, 
+            String type,
             Element fhirElement,
             String cssClass)
         {
@@ -585,7 +588,7 @@ namespace FGraph
                     {
                         String system = System(codeableConcept.Coding[0].System);
                         targetNode.DisplayName += $"{system}#{codeableConcept.Coding[0].Code}";
-                        targetNode.HRef = codeableConcept.Coding[0].System;
+                        targetNode.HRef = this.HRef(null, codeableConcept.Coding[0].System, null, false);
                     }
                     break;
 
@@ -753,7 +756,7 @@ namespace FGraph
                 return targetNode;
             }
 
-            this.ParseItemError("", "GetTargetNode", $"Can not find target '{targetAnchor.Url}'.");
+            this.ParseItemError(String.Empty, "GetTargetNode", $"Can not find target '{targetAnchor.Url}'.");
             return null;
         }
 
@@ -824,7 +827,7 @@ namespace FGraph
 
             if (elementDiff.Pattern != null)
             {
-                GraphNode targetNode = CreateFhirPrimitiveNode("pattern", elementDiff.Pattern, PatternNode_CssClass);
+                GraphNode targetNode = CreateFhirPrimitiveNode(sourceNode.TraceMsg(), "pattern", elementDiff.Pattern, PatternNode_CssClass);
                 sourceNode.AddChild(link, 0, targetNode);
                 targetNode.AddParent(link, 0, sourceNode);
                 if (this.DebugFlag)
@@ -833,7 +836,7 @@ namespace FGraph
 
             if (elementDiff.Fixed != null)
             {
-                GraphNode targetNode = CreateFhirPrimitiveNode("fix", elementDiff.Fixed, FixNode_CssClass);
+                GraphNode targetNode = CreateFhirPrimitiveNode(sourceNode.TraceMsg(), "fix", elementDiff.Fixed, FixNode_CssClass);
                 sourceNode.AddChild(link, 0, targetNode);
                 targetNode.AddParent(link, 0, sourceNode);
                 if (this.DebugFlag)

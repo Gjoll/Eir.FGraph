@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 
@@ -9,7 +10,16 @@ namespace FGraph
     {
         public String Class { get; set; }
         public String Text { get; set; }
-        public String HRef { get; set; }
+        public String HRef
+        {
+            get => this.hRef;
+            set
+            {
+                //Debug.Assert(value != "http://hl7.org/fhir/us/breast-radiology/CodeSystem/ObservationCodesCS");
+                this.hRef = value;
+            }
+        }
+        String hRef;
         public String Title { get; set; }
 
         public SEText(String text, String hRef = null, String title = null)
