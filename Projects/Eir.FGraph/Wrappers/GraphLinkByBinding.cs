@@ -11,5 +11,8 @@ namespace FGraph
         {
             this.Source = data.RequiredValue("source");
         }
+
+        public override void Dump(StringBuilder sb, String margin) =>
+            Dump("LinkByBinding", sb, margin);
     }
 }

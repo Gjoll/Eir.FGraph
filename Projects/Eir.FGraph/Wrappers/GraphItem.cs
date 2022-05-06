@@ -7,7 +7,7 @@ using System.Text;
 
 namespace FGraph
 {
-    public class GraphItem
+    public abstract class GraphItem
     {
         protected FGrapher fGraph;
         protected String traceMsg;
@@ -26,5 +26,6 @@ namespace FGraph
         }
 
         public virtual String TraceMsg() => this.traceMsg;
+        public abstract void Dump(StringBuilder sb, String margin);
     }
 }

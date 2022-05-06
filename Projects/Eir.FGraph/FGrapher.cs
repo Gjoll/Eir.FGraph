@@ -1,20 +1,18 @@
 ﻿using Eir.DevTools;
+using Eir.FhirKhit.R4;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json.Linq;
-using Hl7.Fhir.Model;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Hl7.Fhir.Serialization;
-using System.Linq;
-using Eir.FhirKhit.R4;
-using System.Collections.Concurrent;
 using Task = System.Threading.Tasks.Task;
 
 namespace FGraph
@@ -48,8 +46,8 @@ namespace FGraph
         ConcurrentDictionary<String, GraphNode> graphNodesByName = new ConcurrentDictionary<string, GraphNode>();
         ConcurrentDictionary<GraphAnchor, GraphNode> graphNodesByAnchor = new ConcurrentDictionary<GraphAnchor, GraphNode>();
 
-        List<GraphLink> graphLinks = new List<GraphLink>();
-        List<SvgEditor> svgEditors = new List<SvgEditor>();
+        List<GraphLink> graphLinks { get; } = new List<GraphLink>();
+        List<SvgEditor> svgEditors { get; } = new List<SvgEditor>();
 
         public bool DebugFlag { get; set; } = true;
 
@@ -345,9 +343,9 @@ namespace FGraph
                         this.SetAnchor(node);
                         if (this.graphNodesByName.TryAdd(node.NodeName, node) == false)
                         {
-                            this.ParseItemError(sourceFile, 
+                            this.ParseItemError(sourceFile,
                                 fcn,
-                                $"Error adding node {node.NodeName} to graphNodesByAnchor. Item already exists?");
+                                $"Error adding node {node.NodeName} to graphNodesByName. Item already exists?");
                             return;
                         }
 
@@ -483,6 +481,29 @@ namespace FGraph
             }
         }
 
+        public void DumpNodeLinks(String path)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("");
+            sb.AppendLine("");
+            sb.AppendLine("Nodes");
+            sb.AppendLine("");
+            {
+                List<String> keys = graphNodesByName.Keys.ToList();
+                keys.Sort();
+                foreach (String key in keys)
+                    graphNodesByName[key].Dump(sb, "    ");
+            }
+
+            sb.AppendLine("");
+            sb.AppendLine("");
+            sb.AppendLine("Links");
+            sb.AppendLine("");
+            foreach (GraphLink link in graphLinks)
+                link.Dump(sb, "    ");
+            File.WriteAllText(path, sb.ToString());
+        }
+
         public void Process()
         {
             if (String.IsNullOrEmpty(this.OutputDir) == true)
@@ -572,7 +593,7 @@ namespace FGraph
             }
         }
 
-        GraphNode CreateFhirPrimitiveNode(String sourceFile, 
+        GraphNode CreateFhirPrimitiveNode(String sourceFile,
             String type,
             Element fhirElement,
             String cssClass)

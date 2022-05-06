@@ -38,5 +38,8 @@ namespace FGraph
             this.Item = data.RequiredValue("item");
             this.CssClass = data.RequiredValue("cssClass");
         }
+
+        public override void Dump(StringBuilder sb, String margin) =>
+            sb.AppendLine($"{margin}Legend: {LegendName} {Item} {CssClass}");
     }
 }

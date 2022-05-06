@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -29,6 +30,14 @@ namespace FGraph
                 this.Node = node;
                 this.Depth = depth;
                 this.Keys = new HashSet<String>(keys.Split(','));
+            }
+
+            public void Dump(StringBuilder sb, String margin)
+            {
+                sb.AppendLine($"{margin}Node: '{Node.NodeName}'");
+                sb.DumpString($"{margin}    ", "depth", Depth.ToString());
+                sb.AppendLine($"{margin}    Traversal");
+                this.Traversal.Dump(sb, $"{margin}        ");
             }
         }
 
@@ -156,6 +165,41 @@ namespace FGraph
 
             Link link = new Link(gLink, parent, depth, "");
             this.ParentLinks.Add(link);
+        }
+
+        public override void Dump(StringBuilder sb, String margin)
+        {
+            sb.AppendLine($"{margin}GraphNode:");
+            sb.DumpString($"{margin}    ", "NodeName", NodeName);
+            sb.DumpString($"{margin}    ", "DisplayName", DisplayName);
+            sb.DumpString($"{margin}    ", "SortPrefix", SortPrefix);
+            sb.DumpString($"{margin}    ", "CssClass", CssClass);
+            sb.DumpString($"{margin}    ", "LHS", LhsAnnotationText);
+            sb.DumpString($"{margin}    ", "RHS", RhsAnnotationText);
+
+            if (this.Traversals.Count > 0)
+            {
+                sb.Append($"{margin}    Traversals ");
+                foreach (String traversal in Traversals)
+                    sb.Append($"{traversal} ");
+                sb.AppendLine($"");
+            }
+
+            if (this.ParentLinks.Count > 0)
+            {
+                sb.AppendLine($"{margin}    Parent Links");
+                foreach (Link link in this.ParentLinks)
+                    link.Dump(sb, $"{margin}        ");
+                sb.AppendLine($"");
+            }
+
+            if (this.ChildLinks.Count > 0)
+            {
+                sb.AppendLine($"{margin}    Child Links");
+                foreach (Link link in this.ChildLinks)
+                    link.Dump(sb, $"{margin}        ");
+                sb.AppendLine($"");
+            }
         }
     }
 }

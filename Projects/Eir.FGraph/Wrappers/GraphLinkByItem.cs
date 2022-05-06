@@ -1,11 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace FGraph
 {
-    class GraphLinkByItem : GraphLink
+    abstract class GraphLinkByItem : GraphLink
     {
         /// <summary>
         /// Regex name of sources.
@@ -27,6 +26,15 @@ namespace FGraph
         {
             this.Source = data.RequiredValue("source");
             this.Item = data.OptionalValue("item");
+        }
+
+        protected void Dump(String name, StringBuilder sb, String margin)
+        {
+            sb.AppendLine($"{margin}{name}:");
+            sb.DumpString($"{margin}    ", "Source", Source);
+            sb.DumpString($"{margin}    ", "Item", Item);
+            sb.DumpString($"{margin}    ", "Key", Key);
+            sb.DumpString($"{margin}    ", "depth", Depth.ToString());
         }
     }
 }

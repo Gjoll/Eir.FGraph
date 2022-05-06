@@ -127,6 +127,7 @@ namespace FGraph
 
             this.fGrapher.ConversionInfo(fcn, $"Processing");
             this.fGrapher.Process();
+
             foreach (Options.Rendering rendering in this.options.traversals)
             {
                 bool Exists(String dir, ref String relativePath)
@@ -181,6 +182,7 @@ namespace FGraph
             this.fGrapher.ConversionInfo(fcn, $"Saving");
             this.fGrapher.SaveAll();
             this.fGrapher.ConversionInfo(fcn, $"Done");
+            this.fGrapher.DumpNodeLinks(@"c:\Temp\Dump.txt");
             return this.fGrapher.HasErrors == false;
         }
 

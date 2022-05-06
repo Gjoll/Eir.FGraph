@@ -10,5 +10,7 @@ namespace FGraph
         public GraphLinkByReference(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data)
         {
         }
+        public override void Dump(StringBuilder sb, String margin) =>
+            Dump("LinkByReference", sb, margin);
     }
 }

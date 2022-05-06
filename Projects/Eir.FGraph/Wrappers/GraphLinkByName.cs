@@ -15,5 +15,11 @@ namespace FGraph
             this.Source = data.RequiredValue("source");
             this.Target = data.RequiredValue("target");
         }
+        public override void Dump(StringBuilder sb, String margin)
+        {
+            sb.AppendLine($"{margin}LinkByName");
+            sb.DumpString($"{margin}    ", "Source", Source);
+            sb.DumpString($"{margin}    ", "Target", Target);
+        }
     }
 }
