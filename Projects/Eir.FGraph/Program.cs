@@ -182,7 +182,7 @@ namespace FGraph
             this.fGrapher.ConversionInfo(fcn, $"Saving");
             this.fGrapher.SaveAll();
             this.fGrapher.ConversionInfo(fcn, $"Done");
-            this.fGrapher.DumpNodeLinks(@"c:\Temp\Dump.txt");
+            //this.fGrapher.DumpNodeLinks(@"c:\Temp\Dump.txt");
             return this.fGrapher.HasErrors == false;
         }
 
