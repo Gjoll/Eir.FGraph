@@ -38,13 +38,13 @@ namespace FGraph
 
         public static String NormalizedName(this StructureDefinition sd, String id)
         {
-            String baseName = sd.BaseDefinition.LastUriPart();
+            String baseName = sd.Type;
             return $"{baseName}.{id}";
         }
 
         public static ElementDefinition FindDiffElement(this StructureDefinition sd, String id)
         {
-            String baseName = sd.BaseDefinition.LastUriPart();
+            String baseName = sd.Type;
             Int32 index = id.IndexOf('.');
             String normName;
             if (index > 0)
