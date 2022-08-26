@@ -5,7 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>FGraph</ToolCommandName>
-    <Version>2.18.25</Version>
+    <Version>2.18.26</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Gjoll/Eir.FGraph</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
