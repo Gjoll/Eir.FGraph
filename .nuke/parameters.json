@@ -1,4 +1,4 @@
 {
   "$schema": "./build.schema.json",
-  "Solution": "Eir.FGraph.sln"
+  "Solution": "FGraph.sln"
 }

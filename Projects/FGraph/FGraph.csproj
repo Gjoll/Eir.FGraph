@@ -7,10 +7,10 @@
     <ToolCommandName>FGraph</ToolCommandName>
     <Version>0.0.0</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageProjectUrl>https://github.com/Gjoll/Eir.FGraph</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/Gjoll/FGraph</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryType></RepositoryType>
-    <RepositoryUrl>https://github.com/Gjoll/Eir.FGraph</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Gjoll/FGraph</RepositoryUrl>
     <PackageTags>sNodes</PackageTags>
   </PropertyGroup>
 
