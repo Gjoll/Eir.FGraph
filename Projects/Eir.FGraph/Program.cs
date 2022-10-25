@@ -11,7 +11,7 @@ namespace FGraph
     {
         class Options
         {
-            public class Rendering
+            public class Traversal
             {
                 public String name { get; set; }
                 public String param1 { get; set; }
@@ -26,7 +26,7 @@ namespace FGraph
             public String outputDir { get; set; }
             public String baseUrl { get; set; }
             public String[] resourcePaths { get; set; }
-            public Rendering[] traversals { get; set; }
+            public Traversal[] traversals { get; set; }
             public String cssBinding { get; set; }
             public String cssFix { get; set; }
             public String cssPattern { get; set; }
@@ -128,7 +128,7 @@ namespace FGraph
             this.fGrapher.ConversionInfo(fcn, $"Processing");
             this.fGrapher.Process();
 
-            foreach (Options.Rendering rendering in this.options.traversals)
+            foreach (Options.Traversal traversal in this.options.traversals)
             {
                 bool Exists(String dir, ref String relativePath)
                 {
@@ -140,10 +140,10 @@ namespace FGraph
                 }
 
                 Int32 depth = 1;
-                if (rendering.depth.HasValue)
-                    depth = rendering.depth.Value;
+                if (traversal.depth.HasValue)
+                    depth = traversal.depth.Value;
 
-                String cssFile = rendering.cssFile;
+                String cssFile = traversal.cssFile;
                 if (
                     (!Exists(Path.GetFullPath("."), ref cssFile)) &&
                     (!Exists(this.inputDir, ref cssFile))
@@ -152,30 +152,30 @@ namespace FGraph
                     throw new Exception($"Css file '{cssFile}' not found in '{Path.GetFullPath(".")}' or '{Path.GetFullPath(this.inputDir)}'");
                 }
 
-                switch (rendering.name.ToLower())
+                switch (traversal.name.ToLower())
                 {
                     case "frag":
                     case "focus":
-                        this.fGrapher.RenderFocusGraphs(cssFile, rendering.name.ToLower(), depth);
+                        this.fGrapher.RenderFocusGraphs(cssFile, traversal.name.ToLower(), depth);
                         break;
  
                     case "single":
-                        if (String.IsNullOrEmpty(rendering.param1))
+                        if (String.IsNullOrEmpty(traversal.param1))
                             throw new Exception($"Rendering.param1 must be start node");
-                        if (String.IsNullOrEmpty(rendering.param2))
+                        if (String.IsNullOrEmpty(traversal.param2))
                             throw new Exception($"Rendering.param2 must graph name");
-                        if (String.IsNullOrEmpty(rendering.param3))
+                        if (String.IsNullOrEmpty(traversal.param3))
                             throw new Exception($"Rendering.param3 must key[s]");
                         this.fGrapher.RenderSingleNode(cssFile,
-                            rendering.param1,
+                            traversal.param1,
                             depth,
                             "focus",
-                            rendering.param2,
-                            rendering.param3);
+                            traversal.param2,
+                            traversal.param3);
                         break;
                     
                     default:
-                        throw new NotImplementedException($"Rendering '{rendering.name}' is not known");
+                        throw new NotImplementedException($"Rendering '{traversal.name}' is not known");
                 }
             }
 
