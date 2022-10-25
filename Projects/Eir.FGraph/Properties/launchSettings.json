@@ -3,7 +3,7 @@
     "FGraph": {
       "commandName": "Project",
       "commandLineArgs": "Automate\\fgraph.json",
-      "workingDirectory": "C:\\Development\\HL7\\BreastRadiologyProfilesV3\\Projects"
+      "workingDirectory": "C:\\Development\\HL7\\Fhir.BreastRadiologyProfiles\\Projects"
     }
   }
 }
