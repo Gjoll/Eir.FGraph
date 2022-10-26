@@ -218,41 +218,23 @@ namespace FGraph
             parentNodes.Add(focusNode);
 
             List<SENode> retVal = new List<SENode>();
-            foreach (GraphNode.Link parentLink in focusNode.ParentLinks)
-            {
-                if (
-                    (depth >= 0) &&
-                    (traversalFilterRex.IsMatch(parentLink.Traversal.TraversalName)) &&
-                    (parentNodes.Contains(parentLink.Node) == false)
-                )
-                {
-                    var parentNode = parentLink.Node;
 
-                    // we want to link to top level parent, not element node.
-                    while ((parentNode != null) && (parentNode.Anchor?.Item != null))
-                    {
-                        switch (parentNode.ParentLinks.Count)
-                        {
-                            case 0:
-                                this.ParseItemError(parentNode.TraceMsg(), fcn, $"No parent nodes found");
-                                parentNode = null;
-                                break;
-                            case 1:
-                                parentNode = parentNode.ParentLinks[0].Node;
-                                break;
-                            default:
-                                this.ParseItemError(parentNode.TraceMsg(), fcn, $"Multiple ({parentNode.ParentLinks.Count}) parent nodes detected");
-                                break;
-                        }
-                    }
-                    if (parentNode != null)
-                    {
-                        SENode parent = CreateNode(parentNode);
-                        retVal.Add(parent);
-                    }
+            // Recursively search up parent tree for all parents that have anchor and 
+            // add those parents into retVal list.
+            void SeachForParentWithAnchor(GraphNode node)
+            {
+                //Debug.Assert(node.DisplayName != "Other Modality Findings");
+                foreach (GraphNode.Link parentLink in node.ParentLinks)
+                {
+                    GraphNode parentNode = parentLink.Node;
+                    if (String.IsNullOrEmpty(parentNode.Anchor?.Item))
+                        retVal.Add(CreateNode(parentNode));
+                    else
+                        SeachForParentWithAnchor(parentNode);
                 }
             }
-
+            if (depth > 0)
+                SeachForParentWithAnchor(focusNode);
             return retVal;
         }
 
