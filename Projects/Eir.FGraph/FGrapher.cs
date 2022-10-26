@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -27,24 +28,25 @@ namespace FGraph
         public String PatternNode_CssClass = "value";
         ConcurrentBag<Task> tasks = new ConcurrentBag<Task>();
 
-        public bool ShowClass { get; set; } = true;
-        public string GraphName { get; set; } = null;
+        public string GraphName { get; set; } = String.Empty;
 
-        public string BaseUrl { get; set; }
+        public string BaseUrl { get; set; } = String.Empty;
 
-        String currentItem;
+        String currentItem = String.Empty;
 
         public string OutputDir
         {
             get => this.outputDir;
             set => this.outputDir = Path.GetFullPath(value);
         }
-        private string outputDir;
+        private string outputDir = String.Empty;
 
         ConcurrentDictionary<String, List<GraphLegend>> legends = new ConcurrentDictionary<String, List<GraphLegend>>();
         ConcurrentDictionary<String, DomainResource> resources = new ConcurrentDictionary<String, DomainResource>();
         ConcurrentDictionary<String, GraphNode> graphNodesByName = new ConcurrentDictionary<string, GraphNode>();
         ConcurrentDictionary<GraphAnchor, GraphNode> graphNodesByAnchor = new ConcurrentDictionary<GraphAnchor, GraphNode>();
+
+        public ImmutableSortedDictionary<GraphAnchor, GraphNode> graphNodesByAnchorSorted => graphNodesByAnchor.ToImmutableSortedDictionary();
 
         List<GraphLink> graphLinks { get; } = new List<GraphLink>();
         List<SvgEditor> svgEditors { get; } = new List<SvgEditor>();
@@ -61,8 +63,10 @@ namespace FGraph
             base.ConversionError("FGrapher", method, msg);
         }
 
-        public void ParseItemError(String sourceFile, string method, string msg)
+        public void ParseItemError(String? sourceFile, string method, string msg)
         {
+            if (sourceFile == null)
+                sourceFile = String.Empty;
             String[] sourceFileLines = sourceFile.Split("/n");
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(msg);
@@ -97,15 +101,15 @@ namespace FGraph
             base.ConversionInfo("FGrapher", method, msg);
         }
 
-        public bool TryGetNodeByName(String name, out GraphNode node) => this.graphNodesByName.TryGetValue(name, out node);
-        public bool TryGetNodeByAnchor(GraphAnchor anchor, out GraphNode node) => this.graphNodesByAnchor.TryGetValue(anchor, out node);
+        public bool TryGetNodeByName(String name, out GraphNode? node) => this.graphNodesByName.TryGetValue(name, out node);
+        public bool TryGetNodeByAnchor(GraphAnchor anchor, out GraphNode? node) => this.graphNodesByAnchor.TryGetValue(anchor, out node);
 
 
-        public bool TryGetResource<T>(String url, out T sd)
+        public bool TryGetResource<T>(String url, out T? sd)
         where T : DomainResource
         {
             sd = null;
-            if (this.resources.TryGetValue(url, out DomainResource dr) == false)
+            if (this.resources.TryGetValue(url, out DomainResource? dr) == false)
                 return false;
             sd = dr as T;
             if (sd == null)
@@ -113,9 +117,9 @@ namespace FGraph
             return true;
         }
 
-        public bool TryGetProfile(String url, out StructureDefinition sd) => this.TryGetResource<StructureDefinition>(url, out sd);
-        public bool TryGetValueSet(String url, out ValueSet vs) => this.TryGetResource<ValueSet>(url, out vs);
-        public bool TryGetProfile(String url, out CodeSystem cs) => this.TryGetResource<CodeSystem>(url, out cs);
+        public bool TryGetProfile(String url, out StructureDefinition? sd) => this.TryGetResource<StructureDefinition>(url, out sd);
+        public bool TryGetValueSet(String url, out ValueSet? vs) => this.TryGetResource<ValueSet>(url, out vs);
+        public bool TryGetProfile(String url, out CodeSystem? cs) => this.TryGetResource<CodeSystem>(url, out cs);
 
 
         public void LoadResourcesStart(String path)
@@ -197,7 +201,7 @@ namespace FGraph
                     throw new Exception($"Unknown extension for serialized fhir resource '{path}'");
             }
 
-            String resourceUrl = null;
+            String? resourceUrl = null;
             switch (domainResource)
             {
                 case StructureDefinition sDef:
@@ -254,7 +258,9 @@ namespace FGraph
                 json.AppendLine("]");
                 try
                 {
-                    JArray array = JsonConvert.DeserializeObject<JArray>(json.ToString());
+                    JArray? array = JsonConvert.DeserializeObject<JArray>(json.ToString());
+                    if (array == null)
+                        throw new Exception($"Null array");
                     foreach (var item in array)
                         LoadItem(path, item);
                 }
@@ -268,9 +274,11 @@ namespace FGraph
 
         void LoadItem(String sourceFile, JToken item)
         {
-            JObject j = item as JObject;
-            foreach (KeyValuePair<String, JToken> kvp in j)
+            JObject j = (JObject)item;
+            foreach (KeyValuePair<String, JToken?> kvp in j)
             {
+                if (kvp.Value == null)
+                    throw new Exception($"Null jtoken");
                 this.currentItem = $"{kvp.Key}: {kvp.Value}";
                 LoadItem(sourceFile, kvp.Key, kvp.Value);
             }
@@ -286,11 +294,10 @@ namespace FGraph
             String hRef = this.HRef(node.TraceMsg(), node.Anchor.Url, node.Anchor.Item);
             node.HRef = hRef;
 
-            if (this.TryGetProfile(node.Anchor.Url, out StructureDefinition sDef) == true)
+            if (this.TryGetProfile(node.Anchor.Url, out StructureDefinition? sDef) == true)
             {
                 node.SDef = sDef;
-
-                String linkElementId = node.Anchor.Item;
+                String? linkElementId = node.Anchor?.Item;
                 /*
                  * If link element is is null or starts with '.', then prepend the anchor item id to it.
                  */
@@ -298,11 +305,11 @@ namespace FGraph
                     (String.IsNullOrEmpty(linkElementId)) ||
                     (linkElementId.StartsWith("."))
                 )
-                    linkElementId = node.Anchor.Item + linkElementId;
+                    linkElementId = node.Anchor?.Item + linkElementId;
 
                 if (node.SDef == null)
                 {
-                    this.ParseItemError(node.TraceMsg(), fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor.Url}'");
+                    this.ParseItemError(node.TraceMsg(), fcn, $"Node {node.NodeName}. Can not find profile '{node.Anchor?.Url}'");
                     return;
                 }
 
@@ -328,7 +335,7 @@ namespace FGraph
                 case "legend":
                     {
                         GraphLegend node = new GraphLegend(this, sourceFile, value);
-                        if (this.legends.TryGetValue(node.LegendName, out List<GraphLegend> itemList) == false)
+                        if (this.legends.TryGetValue(node.LegendName, out List<GraphLegend>? itemList) == false)
                         {
                             itemList = new List<GraphLegend>();
                             this.legends.TryAdd(node.LegendName, itemList);
@@ -340,6 +347,8 @@ namespace FGraph
                 case "node":
                     {
                         GraphNode node = new GraphNode(this, sourceFile, value);
+                        //if (node.NodeName.Contains("BreastAssessmentCategory"))
+                        //    Debugger.Break();
                         this.SetAnchor(node);
                         if (this.graphNodesByName.TryAdd(node.NodeName, node) == false)
                         {
@@ -364,8 +373,8 @@ namespace FGraph
 
                 case "graph":
                     {
-                        String nodeName = value?["nodeName"]?.Value<String>();
-                        String traversalName = value?["traversalName"]?.Value<String>();
+                        String? nodeName = value?["nodeName"]?.Value<String>();
+                        String? traversalName = value?["traversalName"]?.Value<String>();
                         if (String.IsNullOrEmpty(nodeName))
                         {
                             this.ParseItemError(sourceFile, fcn, $"graph command missing required nodeName");
@@ -378,13 +387,13 @@ namespace FGraph
                             return;
                         }
 
-                        if (this.TryGetNodeByName(nodeName, out GraphNode node) == false)
+                        if (this.TryGetNodeByName(nodeName, out GraphNode? node) == false)
                         {
                             this.ParseItemError(sourceFile, fcn, $"unknown node '{nodeName}' in graph command");
                             return;
                         }
-                        if (node.Traversals.Contains(traversalName) == false)
-                            node.Traversals.Add(traversalName);
+                        if (node?.Traversals.Contains(traversalName) == false)
+                            node?.Traversals.Add(traversalName);
                     }
                     break;
 
@@ -438,7 +447,9 @@ namespace FGraph
         }
 
 
-        protected String HRef(String sourceFile, String url, String item = null, bool warnFlag = true)
+        protected String HRef(String sourceFile, String url,
+            String? item = null,
+            bool warnFlag = true)
         {
             const String fcn = "HRef";
 
@@ -463,10 +474,10 @@ namespace FGraph
             if (String.IsNullOrEmpty(item) == true)
                 return $"{parts[0]}-{parts[1]}.html";
 
-            if (this.TryGetResource<DomainResource>(url, out DomainResource resource) == false)
+            if (this.TryGetResource<DomainResource>(url, out DomainResource? resource) == false)
             {
                 this.ParseItemError(sourceFile, fcn, $"Resource {url} not found");
-                return null;
+                return String.Empty;
             }
 
             switch (resource)
@@ -475,9 +486,13 @@ namespace FGraph
                     String normalizedName = sDef.NormalizedName(item);
                     return HRefStructDef(parts[1], normalizedName);
 
+                case null:
+                    this.ParseItemError(sourceFile, fcn, $"Resource is null");
+                    return String.Empty;
+
                 default:
                     this.ParseItemError(sourceFile, fcn, $"Resource type '{resource.GetType().Name}' not implemented ");
-                    return null;
+                    return String.Empty;
             }
         }
 
@@ -571,8 +586,8 @@ namespace FGraph
 
         void ProcessLink(GraphLink link)
         {
-            if (link.breakFlag)
-                Debugger.Break();
+            //if (link.breakFlag)
+            //    Debugger.Break();
             this.currentItem = link.TraceMsg();
             switch (link)
             {
@@ -609,7 +624,7 @@ namespace FGraph
                     {
                         String system = System(codeableConcept.Coding[0].System);
                         targetNode.DisplayName += $"{system}#{codeableConcept.Coding[0].Code}";
-                        targetNode.HRef = this.HRef(null, codeableConcept.Coding[0].System, null, false);
+                        targetNode.HRef = this.HRef(String.Empty, codeableConcept.Coding[0].System, null, false);
                     }
                     break;
 
@@ -647,8 +662,8 @@ namespace FGraph
 
         bool TryGetChildElement(GraphNode sourceNode,
             String linkElementId,
-            out ElementDefinition elementDiff,
-            out ElementDefinition elementSnap)
+            out ElementDefinition? elementDiff,
+            out ElementDefinition? elementSnap)
         {
             const String fcn = "GetChildElement";
 
@@ -675,27 +690,29 @@ namespace FGraph
 
             if (sourceNode.SDef == null)
             {
-                this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName}. Can not find profile '{sourceNode.Anchor.Url}'");
+                this.ParseItemError(sourceNode?.TraceMsg(), fcn, $"Node {sourceNode?.NodeName}. Can not find profile '{sourceNode?.Anchor?.Url}'");
                 return false;
             }
 
-            elementDiff = sourceNode.SDef.FindDiffElement(linkElementId);
+            elementDiff = sourceNode?.SDef?.FindDiffElement(linkElementId);
             if (elementDiff == null)
             {
-                this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName}. Can not find diff element {linkElementId}'.");
+                this.ParseItemError(sourceNode?.TraceMsg(), fcn, $"Node {sourceNode?.NodeName}. Can not find diff element {linkElementId}'.");
                 return false;
             }
 
-            if (sourceNode.SDef.BaseDefinition == "http://hl7.org/fhir/StructureDefinition/Extension")
+            if (sourceNode?.SDef?.BaseDefinition == "http://hl7.org/fhir/StructureDefinition/Extension")
             {
                 elementSnap = elementDiff;
                 return true;
             }
 
-            elementSnap = sourceNode.SDef.FindSnapElement(linkElementId);
+            elementSnap = sourceNode?.SDef?.FindSnapElement(linkElementId);
             if (elementSnap == null)
             {
-                this.ParseItemError(sourceNode.TraceMsg(), fcn, $"Node {sourceNode.NodeName}. Can not find snapshot element {linkElementId}'.");
+                this.ParseItemError(sourceNode?.TraceMsg(),
+                    fcn,
+                    $"Node {sourceNode?.NodeName}. Can not find snapshot element {linkElementId}'.");
                 return false;
             }
 
@@ -713,13 +730,19 @@ namespace FGraph
             {
                 foreach (String targetRef in profiles)
                 {
-                    GraphAnchor targetAnchor = new GraphAnchor(targetRef, null);
-                    GraphNode targetNode = GetTargetNode(targetAnchor);
-                    sourceNode.AddChild(link, link.Depth, targetNode);
-                    targetNode.AddParent(link, link.Depth, sourceNode);
-                    targetNode.LhsAnnotationText = $"{elementSnap.Min.Value}..{elementSnap.Max}";
-                    if (this.DebugFlag)
-                        this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
+                    GraphAnchor targetAnchor = new GraphAnchor(targetRef);
+                    GraphNode? targetNode = GetTargetNode(targetAnchor);
+                    if (targetNode != null)
+                    {
+                        sourceNode.AddChild(link, link.Depth, targetNode);
+                        targetNode.AddParent(link, link.Depth, sourceNode);
+                        Int32? min = elementSnap?.Min;
+                        if (min == null)
+                            min = 0;
+                        targetNode.LhsAnnotationText = $"{min}..{elementSnap?.Max}";
+                        if (this.DebugFlag)
+                            this.ConversionInfo(fcn, $"    {sourceNode.NodeName} -> (profile) {targetNode.NodeName}");
+                    }
                 }
             }
 
@@ -729,11 +752,14 @@ namespace FGraph
                 String linkElementId = link.Item;
                 if (this.DebugFlag)
                     this.ConversionInfo(fcn, $"{sourceNode} -> {linkElementId}");
-                ElementDefinition elementDiff;
-                ElementDefinition elementSnap;
+                ElementDefinition? elementDiff;
+                ElementDefinition? elementSnap;
                 if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
                     return;
-
+                if (elementDiff == null)
+                    throw new ArgumentException("elementDiff");
+                if (elementSnap == null)
+                    throw new ArgumentException("elementSnap");
                 foreach (ElementDefinition.TypeRefComponent typeRef in elementSnap.Type)
                 {
                     if (typeRef.Profile.Count() > 0)
@@ -752,10 +778,14 @@ namespace FGraph
                 ProcessNode(sourceNode, link);
         }
 
-        GraphNode GetTargetNode(GraphAnchor targetAnchor)
+        GraphNode? GetTargetNode(GraphAnchor targetAnchor)
         {
-            if (this.TryGetNodeByAnchor(targetAnchor, out GraphNode targetNode) == true)
+            if (this.TryGetNodeByAnchor(targetAnchor, out GraphNode? targetNode) == true)
+            {
+                if (targetNode == null)
+                    throw new ArgumentException("targetNode");
                 return targetNode;
+            }
 
             if (targetAnchor.Url.StartsWith("http://hl7.org/fhir"))
             {
@@ -815,10 +845,14 @@ namespace FGraph
         {
             //const String fcn = "ProcessNodeBindings";
 
-            ElementDefinition elementDiff;
-            ElementDefinition elementSnap;
+            ElementDefinition? elementDiff;
+            ElementDefinition? elementSnap;
             if (TryGetChildElement(sourceNode, linkElementId, out elementDiff, out elementSnap) == false)
                 return;
+            if (elementDiff == null)
+                throw new ArgumentException("elementDiff");
+            if (elementSnap == null)
+                throw new ArgumentException("elementSnap");
             ProcessNodeBindings(link, sourceNode, linkElementId, elementDiff, elementSnap);
         }
 
@@ -835,8 +869,10 @@ namespace FGraph
                 GraphNode targetNode = new GraphNode(this, "ProcessLink", "FGrapher.ProcessNode", BindingNode_CssClass, false);
                 targetNode.HRef = this.HRef(link.TraceMsg(), elementDiff.Binding.ValueSet);
                 targetNode.DisplayName = elementDiff.Binding.ValueSet.LastPathPart();
-                if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet vs) == true)
+                if (this.TryGetValueSet(elementDiff.Binding.ValueSet, out ValueSet? vs) == true)
                 {
+                    if (vs == null)
+                        throw new ArgumentException("vs");
                     targetNode.DisplayName = vs.Name;
                 }
                 targetNode.LhsAnnotationText = "bind";

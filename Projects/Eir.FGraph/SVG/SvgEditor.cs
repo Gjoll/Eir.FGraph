@@ -14,7 +14,7 @@ namespace FGraph
         class EndPoint
         {
             public PointF Location { get; set; }
-            public String Annotation { get; set; }
+            public String Annotation { get; set; } = String.Empty;
         }
 
         const Int32 MinXGap = 2;
@@ -114,7 +114,7 @@ namespace FGraph
             return retVal;
         }
 
-        public void Render(SENodeGroup group, IEnumerable<GraphLegend> legendNodes)
+        public void Render(SENodeGroup group, IEnumerable<GraphLegend>? legendNodes)
         {
             this.minX = 0;
             this.minY = 0;
@@ -162,7 +162,7 @@ namespace FGraph
                         node,
                         x,
                         y,
-                        null,
+                        new HashSet<String>(),
                         out float width,
                         out float height);
                     x = x + width + this.NodeGapX;
@@ -417,7 +417,7 @@ namespace FGraph
 
 
 
-        String GetClass(params String[] cssClassNames)
+        String? GetClass(params String[] cssClassNames)
         {
             foreach (String cssClassName in cssClassNames)
             {
@@ -436,11 +436,12 @@ namespace FGraph
             out float width,
             out float height)
         {
-            void AddClass(String cssClassx)
+            void AddClass(String? cssClass)
             {
-                if (cssClasses == null) return;
-                if (cssClasses.Contains(cssClassx) == false)
-                    cssClasses.Add(cssClassx);
+                if (cssClass == null)
+                    return;
+                if (cssClasses.Contains(cssClass) == false)
+                    cssClasses.Add(cssClass);
             }
 
             //Debug.Assert((this.RenderTestPoint == null) || node.AllText().Contains(RenderTestPoint) == false);
@@ -515,7 +516,9 @@ namespace FGraph
 
         public void Save(String path)
         {
-            String outputDir = Path.GetDirectoryName(Path.GetFullPath(path));
+            String? outputDir = Path.GetDirectoryName(Path.GetFullPath(path));
+            if (outputDir == null)
+                throw new Exception($"Invalid output dir {path}");
             if (Directory.Exists(outputDir) == false)
                 Directory.CreateDirectory(outputDir);
             this.doc.SaveToFile(path);

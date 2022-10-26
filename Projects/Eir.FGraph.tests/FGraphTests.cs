@@ -3,11 +3,13 @@ using SVGLib;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Reflection.Metadata;
 using System.Text;
 using Eir.DevTools;
 using Hl7.Fhir.Model;
 using Xunit;
+using System.Collections.Generic;
 
 namespace FGraph.Tests
 {
@@ -124,7 +126,12 @@ namespace FGraph.Tests
             f.ProcessLinks();
 
             Assert.True(f.TryGetNodeByName("Main/Alpha", out GraphNode main));
-            f.RenderFocusGraph(TestFile("FocusRenderTest1.css"), main, 1, "focus", "FocusTest");
+            f.RenderFocusGraph(TestFile("FocusRenderTest1.css"), 
+                main, 
+                1, 
+                "focus", 
+                "FocusTest",
+                new HashSet<String>());
             f.SaveAll();
 
             Debug.Assert(f.HasErrors == false);

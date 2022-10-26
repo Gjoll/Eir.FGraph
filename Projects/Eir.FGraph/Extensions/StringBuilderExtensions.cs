@@ -8,7 +8,7 @@ namespace FGraph
 {
     public static class StringBuilderExtensions
     {
-        public static void DumpString(this StringBuilder sb, String margin, String name, String value)
+        public static void DumpString(this StringBuilder sb, String margin, String name, String? value)
         {
             if (String.IsNullOrEmpty(value))
                 return;

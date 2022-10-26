@@ -12,8 +12,8 @@ namespace FGraph
         Int32 maxLhsAnnotation = -1;
         Int32 maxRhsAnnotation = -1;
 
-        public String Class { get; set; }
-        public String SortPrefix { get; set; } = "";
+        public String Class { get; set; } = String.Empty;
+        public String SortPrefix { get; set; } = String.Empty;
         public String Title { get; set; }
         public List<SENode> Nodes { get; set; } = new List<SENode>();
         public List<SENodeGroup> ChildGroups { get; set; } = new List<SENodeGroup>();

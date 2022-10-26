@@ -11,6 +11,41 @@ namespace FGraph
     [DebuggerDisplay("{NodeName}")]
     public class GraphNode : GraphItem
     {
+        public class KeySet
+        {
+            public HashSet<String> Keys { get; } = new HashSet<String>();
+            public HashSet<String> Terms { get; } = new HashSet<String>();
+
+            public KeySet(String keys)
+            {
+                if (String.IsNullOrEmpty(keys) == false)
+                {
+                    foreach (String key in keys.Split(','))
+                    {
+                        String s = key.Trim();
+                        if (s.StartsWith("!"))
+                            this.Terms.Add(s.Substring(1));
+                        else
+                            this.Keys.Add(s);
+                    }
+                }
+            }
+
+            public bool Traverse(HashSet<String> traversalKeys)
+            {
+                if (traversalKeys.Count == 0)
+                    return true;
+                if (this.Terms.Overlaps(traversalKeys))
+                    return false;
+                if (this.Keys.Count == 0)
+                    return true;
+                if (this.Keys.Overlaps(traversalKeys))
+                    return true;
+                return false;
+            }
+
+        }
+
         /// <summary>
         /// Class that defines links to/from this node.
         /// </summary>
@@ -19,7 +54,7 @@ namespace FGraph
             public GraphLink Traversal { get; }
             public GraphNode Node { get; }
             public Int32 Depth { get; }
-            public HashSet<String> Keys { get; }
+            public KeySet Keys { get; }
 
             public Link(GraphLink traversal,
                 GraphNode node,
@@ -29,58 +64,61 @@ namespace FGraph
                 this.Traversal = traversal;
                 this.Node = node;
                 this.Depth = depth;
-                this.Keys = new HashSet<String>(keys.Split(','));
+                this.Keys = new KeySet(keys);
             }
 
             public void Dump(StringBuilder sb, String margin)
             {
-                sb.AppendLine($"{margin}Node: '{Node.NodeName}'");
+                sb.AppendLine($"{margin}Node: '{Node?.NodeName}'");
                 sb.DumpString($"{margin}    ", "depth", Depth.ToString());
                 sb.AppendLine($"{margin}    Traversal");
-                this.Traversal.Dump(sb, $"{margin}        ");
+                this.Traversal?.Dump(sb, $"{margin}        ");
             }
         }
 
         /// <summary>
         /// Name of this node.
         /// </summary>
-        public String NodeName { get; set; }
+        public String NodeName
+        {
+            get => this.nodeName;
+            set
+            {
+                this.nodeName = value;
+                Debug.Assert(this.nodeName != "fhir/BreastImagingComposition");
+            }
+        }
+
+        private String nodeName = String.Empty;
+
+        public KeySet Keys { get; } = new KeySet(String.Empty);
 
         /// <summary>
         /// HRef.
         /// </summary>
-        public String HRef
-        {
-            get => this.hRef;
-            set
-            {
-                //Debug.Assert(value != "http://hl7.org/fhir/us/breast-radiology/CodeSystem/ObservationCodesCS");
-                this.hRef = value;
-            }
-        }
-        String hRef;
+        public String HRef { get; set; } = String.Empty;
 
         /// <summary>
         /// Optional value of what we linkt his node to. Link can be to
         /// a profile, profile element, value set, code set, etc.
         /// </summary>
-        public GraphAnchor Anchor { get; set; }
+        public GraphAnchor? Anchor { get; set; }
 
         /// <summary>
         /// Name to display on graph node. String has multiple parts each seperated
         /// by a '/'. Each part is on its own line.
         /// </summary>
-        public String DisplayName { get; set; }
+        public String DisplayName { get; set; } = String.Empty;
 
         /// <summary>
         /// Prefix to change sort position of item.
         /// </summary>
-        public String SortPrefix { get; set; }
+        public String? SortPrefix { get; set; }
 
         /// <summary>
         /// css class to set svg element to.
         /// </summary>
-        public String CssClass { get; set; }
+        public String? CssClass { get; set; }
 
         /// <summary>
         /// Names of traversals that this list is a part of.
@@ -94,23 +132,23 @@ namespace FGraph
         /// Left hand side (incoming) annotation text. This is printed on the
         /// line that comes into the graph node.
         /// </summary>
-        public String LhsAnnotationText { get; set; }
+        public String? LhsAnnotationText { get; set; }
 
         /// <summary>
         /// Right hand side (incoming) annotation text. This is printed on the
         /// line that comes into the graph node.
         /// </summary>
-        public String RhsAnnotationText { get; set; }
+        public String? RhsAnnotationText { get; set; }
 
         /// <summary>
         /// If anchor points to a profile, this is the profile.
         /// </summary>
-        public StructureDefinition SDef { get; set; } = null;
+        public StructureDefinition? SDef { get; set; } = null;
 
         /// <summary>
         /// Full element id (if sdef)
         /// </summary>
-        public String ElementId { get; set; }
+        public String ElementId { get; set; } = String.Empty;
 
         public GraphNode(FGrapher fGraph, String sourceFile, String traceMsg, String cssClass, bool breakFlag) :
             base(fGraph, 
@@ -135,10 +173,15 @@ namespace FGraph
             this.LhsAnnotationText = data.OptionalValue("lhsAnnotationText");
             this.RhsAnnotationText = data.OptionalValue("rhsAnnotationText");
             {
-                JToken anchor = data["anchor"];
+                JToken? anchor = data["anchor"];
                 if (anchor != null)
                     this.Anchor = new GraphAnchor(anchor);
             }
+
+            String? keys = data.OptionalValue("keys");
+            if (keys == null)
+                keys = String.Empty;
+            this.Keys = new KeySet(keys);
         }
 
         bool AlreadyLinked(IEnumerable<Link> links, GraphNode node)

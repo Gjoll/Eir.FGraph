@@ -2,18 +2,20 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using Hl7.Fhir.ElementModel.Types;
 using Hl7.Fhir.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using String = System.String;
 
 namespace FGraph
 {
     [DebuggerDisplay("{LegendName}")]
     public class GraphLegend : GraphItem
     {
-        public String LegendName { get; set; }
-        public String Item { get; set; }
-        public String CssClass { get; set; }
+        public String LegendName { get; set; } = String.Empty;
+        public String Item { get; set; } = String.Empty;
+        public String CssClass { get; set; } = String.Empty;
 
 
         public GraphLegend(FGrapher fGraph,

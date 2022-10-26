@@ -25,7 +25,7 @@ namespace FGraph
                 data.OptionalBoolValue("break"))
         {
             this.data = data;
-            this.Key = data.OptionalValue("key");
+            this.Key = data.OptionalValue("key", String.Empty);
             this.TraversalName = data.RequiredValue("traversalName");
             this.Depth = data.OptionalIntValue("depth", 1);
         }

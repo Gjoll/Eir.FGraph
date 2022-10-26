@@ -21,7 +21,12 @@ namespace FGraph
                 String tName = traversal.ToMachineName();
                 // Only render top level (profile) nodes.
                 if (node.Traversals.Contains(traversal))
-                    this.RenderFocusGraph(cssFile, node, depth, traversal, $"{tName}Graph-{node.Anchor.Url.LastUriPart()}");
+                    this.RenderFocusGraph(cssFile,
+                        node,
+                        depth,
+                        traversal,
+                        $"{tName}Graph-{node.Anchor?.Url.LastUriPart()}",
+                        new HashSet<string>());
             }
         }
 
@@ -32,11 +37,16 @@ namespace FGraph
             String graphName,
             String keys)
         {
-            if (this.graphNodesByName.TryGetValue(startNode, out GraphNode focusGraphNode) == false)
+            if (keys == null)
+                keys = String.Empty;
+            if (this.graphNodesByName.TryGetValue(startNode, out GraphNode? focusGraphNode) == false)
             {
                 this.ConversionError("RenderSingleNode", $"Start node '{startNode}' not found");
                 return;
             }
+
+            if (focusGraphNode == null)
+                throw new ArgumentException("vs");
 
             HashSet<String> keysHash = new HashSet<string>();
             foreach (String key in keys.Split(','))
@@ -49,7 +59,7 @@ namespace FGraph
             Int32 depth,
             String traversalName,
             String graphName,
-            HashSet<String> keys = null)
+            HashSet<String> keys)
         {
             SvgEditor e = new SvgEditor(graphName);
             e.AddCssFile(cssFile);
@@ -82,13 +92,13 @@ namespace FGraph
                 seGroupFocus.AppendGroupRange(childNodes);
             }
             seGroupParents.Sort();
-            this.legends.TryGetValue("focus", out List<GraphLegend> legendNodes);
+            this.legends.TryGetValue("focus", out List<GraphLegend>? legendNodes);
             e.Render(seGroupParents, legendNodes);
         }
 
         protected SENode CreateNodeBinding(ElementDefinition.ElementDefinitionBindingComponent binding)
         {
-            String hRef = null;
+            String hRef = String.Empty;
             SENode node = new SENode()
             {
                 HRef = hRef
@@ -96,8 +106,10 @@ namespace FGraph
             node.Class = "valueSet";
 
             String displayName = binding.ValueSet.LastPathPart();
-            if (this.TryGetValueSet(binding.ValueSet, out ValueSet vs) == false)
+            if (this.TryGetValueSet(binding.ValueSet, out ValueSet? vs))
             {
+                if (vs == null)
+                    throw new ArgumentException("vs");
                 displayName = vs.Name;
             }
             node.AddTextLine(displayName, hRef);
@@ -111,7 +123,8 @@ namespace FGraph
             {
                 HRef = graphNode.HRef
             };
-            node.Class = graphNode.CssClass;
+            if (graphNode.CssClass != null)
+                node.Class = graphNode.CssClass;
 
             String displayName = graphNode.DisplayName;
             //Debug.Assert(displayName != "Breast/Radiology/Composition");
@@ -122,9 +135,12 @@ namespace FGraph
                 node.AddTextLine(s, graphNode.HRef);
             }
 
-            node.SortPrefix = graphNode.SortPrefix;
-            node.LhsAnnotation = ResolveAnnotation(graphNode, graphNode.LhsAnnotationText);
-            node.RhsAnnotation = ResolveAnnotation(graphNode, graphNode.RhsAnnotationText);
+            if (graphNode.SortPrefix != null)
+                node.SortPrefix = graphNode.SortPrefix;
+            if (graphNode.LhsAnnotationText != null)
+                node.LhsAnnotation = ResolveAnnotation(graphNode, graphNode.LhsAnnotationText);
+            if (graphNode.RhsAnnotationText != null)
+                node.RhsAnnotation = ResolveAnnotation(graphNode, graphNode.RhsAnnotationText);
             return node;
         }
 
@@ -133,24 +149,25 @@ namespace FGraph
         {
             const String fcn = "ResolveCardinality";
 
-            GraphAnchor anchor = node.Anchor;
-            if (anchor == null)
+            if (node.Anchor == null)
             {
                 this.ParseItemError(node.TraceMsg(), fcn, $"Anchor is null");
-                return null;
+                return String.Empty;
             }
 
-            if (this.TryGetProfile(anchor.Url, out StructureDefinition sDef) == false)
+            GraphAnchor anchor = node.Anchor;
+
+            if (this.TryGetProfile(anchor.Url, out StructureDefinition? sDef) == false)
             {
                 this.ParseItemError(node.TraceMsg(), fcn, $"StructureDefinition {anchor.Url} not found");
-                return null;
+                return String.Empty;
             }
 
-            ElementDefinition e = sDef.FindSnapElement(elementId);
+            ElementDefinition? e = sDef?.FindSnapElement(elementId);
             if (e == null)
             {
                 this.ParseItemError(node.TraceMsg(), fcn, $"Element {elementId} not found");
-                return null;
+                return String.Empty;
             }
 
             if (e.Min.HasValue == false)
@@ -158,7 +175,7 @@ namespace FGraph
                 this.ParseItemError(node.TraceMsg(),
                     fcn,
                     $"element {elementId}' min cardinality is empty");
-                return null;
+                return String.Empty;
             }
 
             if (String.IsNullOrWhiteSpace(e.Max) == true)
@@ -166,7 +183,7 @@ namespace FGraph
                 this.ParseItemError(node.TraceMsg(),
                     fcn,
                     $"element {elementId}' max cardinality is empty");
-                return null;
+                return String.Empty;
             }
 
             return $"{e.Min.Value}..{e.Max}";
@@ -177,7 +194,7 @@ namespace FGraph
             String annotationSource)
         {
             if (String.IsNullOrEmpty(annotationSource))
-                return null;
+                return String.Empty;
             switch (annotationSource[0])
             {
                 case '^':
@@ -200,6 +217,7 @@ namespace FGraph
             HashSet<GraphNode> parentNodes = new HashSet<GraphNode>();
             parentNodes.Add(focusNode);
 
+            List<SENode> retVal = new List<SENode>();
             foreach (GraphNode.Link parentLink in focusNode.ParentLinks)
             {
                 if (
@@ -211,7 +229,7 @@ namespace FGraph
                     var parentNode = parentLink.Node;
 
                     // we want to link to top level parent, not element node.
-                    while ((parentNode != null) && (parentNode.Anchor.Item != null))
+                    while ((parentNode != null) && (parentNode.Anchor?.Item != null))
                     {
                         switch (parentNode.ParentLinks.Count)
                         {
@@ -230,10 +248,12 @@ namespace FGraph
                     if (parentNode != null)
                     {
                         SENode parent = CreateNode(parentNode);
-                        yield return parent;
+                        retVal.Add(parent);
                     }
                 }
             }
+
+            return retVal;
         }
 
         IEnumerable<SENodeGroup> TraverseChildren(GraphNode focusNode,
@@ -242,24 +262,31 @@ namespace FGraph
             HashSet<String> keys,
             Stack<GraphNode> nodeStack)
         {
+            //if (focusNode.DisplayName.Contains("Left Breast"))
+            //    Debugger.Break();
+
+            List<SENodeGroup> retVal = new List<SENodeGroup>();
+            if ((svgEditors != null) &&
+                (focusNode.Keys.Traverse(keys) == false))
+                return retVal;
+
             if (nodeStack.Contains(focusNode))
                 throw new Exception($"Circular linkage at {focusNode.TraceMsg()}");
             nodeStack.Push(focusNode);
 
             Regex traversalFilterRex = new Regex(traversalFilter);
-
-            bool HasKey(GraphNode.Link childLink) => (keys == null) || keys.Overlaps(childLink.Keys);
-
             foreach (GraphNode.Link childLink in focusNode.ChildLinks)
             {
+                //if (childLink.Node.NodeName == "BreastImagingComposition/")
+                //    Debugger.Break();
+
                 if (
                     (depth > 0) &&
                     (traversalFilterRex.IsMatch(childLink.Traversal.TraversalName)) &&
-                    (HasKey(childLink))
-                )
+                    (childLink.Keys.Traverse(keys))
+                    )
                 {
                     SENode child = CreateNode(childLink.Node);
-
                     SENodeGroup childContainer = new SENodeGroup(child.SortPrefix, child.AllText());
                     childContainer.AppendNode(child);
 
@@ -267,10 +294,11 @@ namespace FGraph
                         traversalFilter,
                         depth - childLink.Depth,
                         keys, nodeStack));
-                    yield return childContainer;
+                    retVal.Add(childContainer);
                 }
             }
             nodeStack.Pop();
+            return retVal;
         }
     }
 }

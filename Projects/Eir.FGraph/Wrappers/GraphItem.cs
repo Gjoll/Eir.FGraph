@@ -15,13 +15,13 @@ namespace FGraph
         public bool breakFlag;
 
         public GraphItem(FGrapher fGraph,
-            String sourceFile,
-            String traceMsg,
+            String? sourceFile,
+            String? traceMsg,
             bool breakFlag)
         {
             this.fGraph = fGraph;
-            this.SourceFile = sourceFile;
-            this.traceMsg = traceMsg;
+            this.SourceFile = sourceFile == null ? String.Empty : sourceFile;
+            this.traceMsg = traceMsg == null ? String.Empty : traceMsg;
             this.breakFlag = breakFlag;
         }
 

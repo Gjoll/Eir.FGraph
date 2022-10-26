@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Hl7.Fhir.Model;
@@ -13,28 +13,28 @@ namespace FGraph
         {
             public class Traversal
             {
-                public String name { get; set; }
-                public String param1 { get; set; }
-                public String param2 { get; set; }
-                public String param3 { get; set; }
-                public Int32? depth { get; set; }
-                public String cssFile { get; set; }
+                public String name { get; set; } = String.Empty;
+                public String param1 { get; set; } = String.Empty;
+                public String param2 { get; set; } = String.Empty;
+                public String keys { get; set; } = String.Empty;
+                public Int32 depth { get; set; } = 99999;
+                public String cssFile { get; set; } = String.Empty;
             };
 
-            public String graphName { get; set; }
-            public String inputPath { get; set; }
-            public String outputDir { get; set; }
-            public String baseUrl { get; set; }
-            public String[] resourcePaths { get; set; }
-            public Traversal[] traversals { get; set; }
-            public String cssBinding { get; set; }
-            public String cssFix { get; set; }
-            public String cssPattern { get; set; }
+            public String graphName { get; set; } = String.Empty;
+            public String inputPath { get; set; } = String.Empty;
+            public String outputDir { get; set; } = String.Empty;
+            public String baseUrl { get; set; } = String.Empty;
+            public String[] resourcePaths { get; set; } = new String[0];
+            public Traversal[] traversals { get; set; } = new Traversal[0];
+            public String cssBinding { get; set; } = String.Empty;
+            public String cssFix { get; set; } = String.Empty;
+            public String cssPattern { get; set; } = String.Empty;
         }
 
         FGrapher fGrapher;
-        String inputDir = null;
-        private Options options;
+        String inputDir = String.Empty;
+        private Options? options;
 
         public Program()
         {
@@ -89,6 +89,9 @@ namespace FGraph
         {
             const String fcn = "Process";
 
+            if (options == null)
+                throw new Exception("Missing options");
+
             if (String.IsNullOrEmpty(options.outputDir))
                 throw new Exception("Missing 'outputDir' option setting");
             this.fGrapher.OutputDir = options.outputDir;
@@ -123,7 +126,10 @@ namespace FGraph
             if (Directory.Exists(options.inputPath))
                 this.inputDir = options.inputPath;
             else
-                this.inputDir = Path.GetDirectoryName(options.inputPath);
+            {
+                String? s = Path.GetDirectoryName(options.inputPath);
+                this.inputDir = s ?? throw new Exception($"Invalid input path '{options.inputPath}'");
+            }
 
             this.fGrapher.ConversionInfo(fcn, $"Processing");
             this.fGrapher.Process();
@@ -139,10 +145,7 @@ namespace FGraph
                     return true;
                 }
 
-                Int32 depth = 1;
-                if (traversal.depth.HasValue)
-                    depth = traversal.depth.Value;
-
+                Int32 depth = traversal.depth;
                 String cssFile = traversal.cssFile;
                 if (
                     (!Exists(Path.GetFullPath("."), ref cssFile)) &&
@@ -160,18 +163,18 @@ namespace FGraph
                         break;
  
                     case "single":
+                        if (traversal.keys == null)
+                            throw new Exception($"Rendering.keys must be set");
                         if (String.IsNullOrEmpty(traversal.param1))
                             throw new Exception($"Rendering.param1 must be start node");
                         if (String.IsNullOrEmpty(traversal.param2))
                             throw new Exception($"Rendering.param2 must graph name");
-                        if (String.IsNullOrEmpty(traversal.param3))
-                            throw new Exception($"Rendering.param3 must key[s]");
                         this.fGrapher.RenderSingleNode(cssFile,
                             traversal.param1,
                             depth,
                             "focus",
                             traversal.param2,
-                            traversal.param3);
+                            traversal.keys);
                         break;
                     
                     default:

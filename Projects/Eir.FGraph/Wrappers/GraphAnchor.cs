@@ -1,13 +1,20 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Eir.DevTools;
+using Hl7.Fhir.Model;
+using static Eir.FhirKhit.R4.ElementPath;
 
 namespace FGraph
 {
+    [DebuggerDisplay("{UrlName}:{Item}")]
     public class GraphAnchor : IEquatable<GraphAnchor>
     {
+        public String UrlName => this.Url.LastUriPart();
+
         /// <summary>
         /// Url of item.
         /// </summary>
@@ -23,6 +30,8 @@ namespace FGraph
 
         public GraphAnchor(String url, String item = "")
         {
+            //if (url.Contains("BreastAssessmentCategory"))
+            //    Debugger.Break();
             this.Url = url;
             this.Item = item;
         }
@@ -30,10 +39,10 @@ namespace FGraph
         public GraphAnchor(JToken data)
         {
             this.Url = data.RequiredValue("url");
-            this.Item= data.OptionalValue("item");
+            this.Item= data.OptionalValue("item", String.Empty);
         }
 
-        public bool Equals(GraphAnchor other)
+        public bool Equals(GraphAnchor? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -44,7 +53,7 @@ namespace FGraph
             return true;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

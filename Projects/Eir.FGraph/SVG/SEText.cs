@@ -8,25 +8,18 @@ namespace FGraph
 {
     public class SEText
     {
-        public String Class { get; set; }
-        public String Text { get; set; }
-        public String HRef
-        {
-            get => this.hRef;
-            set
-            {
-                //Debug.Assert(value != "http://hl7.org/fhir/us/breast-radiology/CodeSystem/ObservationCodesCS");
-                this.hRef = value;
-            }
-        }
-        String hRef;
-        public String Title { get; set; }
+        public String Class { get; set; } = String.Empty;
+        public String Text { get; set; } = String.Empty;
+        public String HRef { get; set; } = String.Empty;
+        public String Title { get; set; } = String.Empty;
 
-        public SEText(String text, String hRef = null, String title = null)
+        public SEText(String text, String? hRef = null, String? title = null)
         {
             this.Text = text;
-            this.HRef = hRef;
-            this.Title = title;
+            if (hRef != null)
+                this.HRef = hRef;
+            if (title != null)
+                this.Title = title;
         }
 
         public SEText()

@@ -22,15 +22,21 @@ namespace FGraph
 
         public static String RequiredValue(this JToken value, String name)
         {
-            String retVal = OptionalValue(value, name);
+            String? retVal = OptionalValue(value, name);
             if (String.IsNullOrEmpty(retVal))
                 throw new Exception($"Required value for '{name} is missing");
             return retVal;
         }
 
-        public static String OptionalValue(this JToken value, String name)
+        public static String? OptionalValue(this JToken value, String name) =>
+            value?[name]?.Value<String>();
+
+        public static String OptionalValue(this JToken value, String name, String defaultValue)
         {
-            return value?[name]?.Value<String>();
+            String? retVal = OptionalValue(value, name);
+            if (retVal == null)
+                retVal = defaultValue;
+            return retVal;
         }
 
         public static Int32 OptionalIntValue(this JToken value, String name, Int32 defaultValue)

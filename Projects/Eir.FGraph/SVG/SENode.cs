@@ -11,31 +11,19 @@ namespace FGraph
     {
         public String SortPrefix { get; set; } = "";
         public List<SEText> TextLines = new List<SEText>();
-        public String Class { get; set; }
-
+        public String Class { get; set; } = String.Empty;
         public float Width { get; set; } = 0;
-
-        public String HRef
-        {
-            get => this.hRef;
-            set
-            {
-                //Debug.Assert(value != "http://hl7.org/fhir/us/breast-radiology/CodeSystem/ObservationCodesCS");
-                this.hRef = value;
-            }
-        }
-        String hRef;
-
+        public String HRef { get; set; } = String.Empty;
 
         /// <summary>
         /// Annotation on the line coming into the node (at line end);
         /// </summary>
-        public String LhsAnnotation { get; set; }
+        public String LhsAnnotation { get; set; } = String.Empty;
 
         /// <summary>
         /// Annotation on the line leaving the node (at start of outgoing line);
         /// </summary>
-        public String RhsAnnotation { get; set; }
+        public String RhsAnnotation { get; set; } = String.Empty;
 
         public String SortText=> $"{this.SortPrefix}{this.AllText()}";
 
@@ -60,7 +48,7 @@ namespace FGraph
             return this;
         }
 
-        public SENode AddTextLine(String text, String hRef = null, String title = null)
+        public SENode AddTextLine(String text, String? hRef = null, String? title = null)
         {
             return this.AddTextLine(new SEText(text, hRef, title));
         }

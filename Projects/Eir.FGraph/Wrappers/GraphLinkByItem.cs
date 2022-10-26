@@ -25,7 +25,7 @@ namespace FGraph
         public GraphLinkByItem(FGrapher fGraph, String sourceFile, JToken data) : base(fGraph, sourceFile, data)
         {
             this.Source = data.RequiredValue("source");
-            this.Item = data.OptionalValue("item");
+            this.Item = data.OptionalValue("item", String.Empty);
         }
 
         protected void Dump(String name, StringBuilder sb, String margin)

@@ -13,12 +13,21 @@ namespace FGraph
             {
                 case JArray jArray:
                     foreach (JToken item in jArray)
-                        yield return item.Value<String>();
+                    {
+                        String? value = item.Value<String>();
+                        if (value != null)
+                            yield return value;
+                    }
+
                     break;
                 case JToken jToken:
-                    yield return jToken.Value<String>();
+                {
+                    String? value = jToken.Value<String>();
+                    if (value != null)
+                        yield return value;
+                }
                     break;
-                default: 
+                default:
                     throw new Exception($"Unexpected string array type {t.GetType()}");
             }
         }
@@ -28,11 +37,17 @@ namespace FGraph
             switch (t)
             {
                 case JObject jObject:
-                    foreach (KeyValuePair<String, JToken> option in jObject)
-                        yield return new Tuple<string, string>(option.Key, option.Value.Value<String>());
-                        break;
+                    foreach (KeyValuePair<String, JToken?> option in jObject)
+                    {
+                        String? value = option.Value?.Value<String>();
+                        if (value == null)
+                            throw new Exception($"Null string found in json");
+                        yield return new Tuple<string, string>(option.Key, value);
+                    }
 
-                default: 
+                    break;
+
+                default:
                     throw new Exception($"Unexpected string array type {t.GetType()}");
             }
         }
