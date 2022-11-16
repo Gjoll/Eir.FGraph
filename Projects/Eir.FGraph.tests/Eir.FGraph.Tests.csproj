@@ -29,7 +29,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\FGraph\FGraph.csproj" />
+    <ProjectReference Include="..\Eir.FGraph\Eir.FGraph.csproj" />
   </ItemGroup>
 
   <ItemGroup>
